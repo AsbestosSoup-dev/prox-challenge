@@ -1,2 +1,4 @@
 .venv
 backend.iml
+cache
+__pycache__
