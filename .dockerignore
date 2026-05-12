@@ -1,0 +1,9 @@
+.git
+.claude
+.idea
+.env
+frontend/
+backend/.venv
+backend/__pycache__
+backend/*.bak
+backend/files
