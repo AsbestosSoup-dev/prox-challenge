@@ -21,13 +21,12 @@ from prompts import SYSTEM_PROMPT
 K = 5
 threshold = .25
 
-ROOT_DIR = Path(__file__).parent.parent
-BACKEND_DIR = ROOT_DIR / "backend"
+BACKEND_DIR = Path(__file__).parent
 FILES_DIR = BACKEND_DIR / "files"
 CACHE_DIR = BACKEND_DIR / "cache"
 PAGES_DIR = CACHE_DIR / "pages"
 
-load_dotenv(dotenv_path=ROOT_DIR / ".env", override=True)
+load_dotenv(dotenv_path=BACKEND_DIR.parent / ".env", override=True)
 client = AsyncAnthropic(api_key=os.getenv("ANTHROPIC_API_KEY"))
 
 class Message(BaseModel):
