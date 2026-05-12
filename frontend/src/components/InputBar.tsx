@@ -125,7 +125,6 @@ export default function InputBar({
         }
     }
 
-    const micBusy = isRecording || isTranscribing
     const canSend = value.trim().length > 0 && !isStreaming
 
     return (
@@ -156,7 +155,7 @@ export default function InputBar({
 
                 <Textarea
                     value={value}
-                    onChange={(e) => onChange(e.target.value)}
+                    onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => onChange(e.target.value)}
                     onKeyDown={handleKeyDown}
                     onPaste={handlePaste}
                     placeholder={isRecording ? "Recording…" : isTranscribing ? "Transcribing…" : "Ask Proxy about OmniPro 220..."}

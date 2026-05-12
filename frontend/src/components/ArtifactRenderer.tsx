@@ -2,15 +2,6 @@ import type { Artifact } from "../types"
 
 function buildSrcDoc(artifact: Artifact): string {
     if (artifact.type === "application/vnd.ant.react") {
-        // We transform "export default function Foo" into "window.__defaultExport = Foo"
-        // so Babel in the browser can find and render it
-        const transformedContent = artifact.content
-                .replace(/export default function\s+(\w+)/, "function $1")
-                .replace(/export default\s+(\w+)/, "window.__defaultExport = $1")
-            + "\nif (typeof window.__defaultExport === 'undefined') { "
-            + "const match = arguments.callee.toString().match(/function (\\w+)/); }"
-
-        // Simpler approach: strip export default, then append render call using last defined component
         const cleaned = artifact.content
             .replace(/import\s+.*?from\s+['"]react['"]/g, '')
             .replace(/export default function\s+(\w+)/, (_, name) => `function ${name}`)
