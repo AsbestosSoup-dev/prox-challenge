@@ -5,20 +5,21 @@ from contextlib import asynccontextmanager
 from pathlib import Path
 from typing import Optional
 
+import httpx
 import numpy as np
 from anthropic import AsyncAnthropic
 from dotenv import load_dotenv
-from fastapi import FastAPI, Request
+from fastapi import FastAPI, File, Request, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import StreamingResponse
+from fastapi.responses import JSONResponse, StreamingResponse
 from pydantic import BaseModel
 from sentence_transformers import SentenceTransformer
 from sklearn.metrics.pairwise import cosine_similarity
 
 from prompts import SYSTEM_PROMPT
 
-K = 3
-threshold = .4
+K = 5
+threshold = .25
 
 ROOT_DIR = Path(__file__).parent.parent
 BACKEND_DIR = ROOT_DIR / "backend"
@@ -26,7 +27,7 @@ FILES_DIR = BACKEND_DIR / "files"
 CACHE_DIR = BACKEND_DIR / "cache"
 PAGES_DIR = CACHE_DIR / "pages"
 
-load_dotenv(dotenv_path=ROOT_DIR / ".env")
+load_dotenv(dotenv_path=ROOT_DIR / ".env", override=True)
 client = AsyncAnthropic(api_key=os.getenv("ANTHROPIC_API_KEY"))
 
 class Message(BaseModel):
@@ -68,6 +69,56 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+
+@app.post("/transcribe")
+async def transcribe(audio: UploadFile = File(...)):
+    api_key = os.getenv("ELEVENLABS_API_KEY")
+    if not api_key:
+        return JSONResponse({"error": "ELEVENLABS_API_KEY not set"}, status_code=500)
+
+    audio_bytes = await audio.read()
+    async with httpx.AsyncClient(timeout=30) as http:
+        response = await http.post(
+            "https://api.elevenlabs.io/v1/speech-to-text",
+            headers={"xi-api-key": api_key},
+            files={"file": (audio.filename or "audio.webm", audio_bytes, audio.content_type or "audio/webm")},
+            data={"model_id": "scribe_v1"},
+        )
+    if response.status_code != 200:
+        return JSONResponse({"error": "Transcription failed", "detail": response.text}, status_code=502)
+    return JSONResponse({"text": response.json().get("text", "")})
+
+
+class SpeakRequest(BaseModel):
+    text: str
+
+@app.post("/speak")
+async def speak(req: SpeakRequest):
+    api_key = os.getenv("ELEVENLABS_API_KEY")
+    if not api_key:
+        return JSONResponse({"error": "ELEVENLABS_API_KEY not set"}, status_code=500)
+
+    voice_id = "IKne3meq5aSn9XLyUdCD"  # Charlie
+
+    async with httpx.AsyncClient(timeout=30) as http:
+        response = await http.post(
+            f"https://api.elevenlabs.io/v1/text-to-speech/{voice_id}",
+            headers={"xi-api-key": api_key, "Content-Type": "application/json"},
+            json={
+                "text": req.text,
+                "model_id": "eleven_turbo_v2_5",
+                "voice_settings": {"stability": 0.5, "similarity_boost": 0.75},
+            },
+        )
+    if response.status_code != 200:
+        return JSONResponse({"error": "TTS failed", "detail": response.text}, status_code=502)
+
+    return StreamingResponse(
+        iter([response.content]),
+        media_type="audio/mpeg",
+        headers={"Content-Disposition": "inline; filename=speech.mp3"},
+    )
 
 
 @app.post("/chat")
@@ -137,6 +188,12 @@ async def chat(request: Request, chat_request: ChatRequest):
             anthropic_messages.append({"role": message.role, "content": message.content})
 
     async def stream_response():
+        if rag_material:
+            pages_payload = [
+                {"source": m["source"], "page": m["page"], "base64": m["base64"]}
+                for m in rag_material
+            ]
+            yield f"data: {json.dumps({'type': 'pages', 'pages': pages_payload})}\n\n"
         async with client.messages.stream(
                 messages=anthropic_messages,
                 max_tokens=4096,

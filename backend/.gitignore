@@ -2,3 +2,4 @@
 backend.iml
 cache
 __pycache__
+*.bak
