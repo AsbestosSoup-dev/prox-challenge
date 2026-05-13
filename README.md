@@ -38,6 +38,8 @@ ELEVENLABS_API_KEY=...        # optional — enables voice input and TTS
 
 ## Architecture
 
+![Architecture diagram](arch.png)
+
 ```
 PDF manuals
    └─ pdf_processing.py
