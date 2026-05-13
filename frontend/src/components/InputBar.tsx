@@ -38,6 +38,7 @@ interface Props {
     onImagesAdd: (images: { data: string; type: string }[]) => void
     onImageRemove: (index: number) => void
     hasMessages?: boolean
+    onAudioError?: () => void
 }
 
 function readFilesAsBase64(files: File[]): Promise<{ data: string; type: string }[]> {
@@ -64,6 +65,7 @@ export default function InputBar({
     onImagesAdd,
     onImageRemove,
     hasMessages = false,
+    onAudioError,
 }: Props) {
     const { text: hintText, visible: hintVisible } = useCyclingPlaceholder(HINTS)
     const [isFocused, setIsFocused] = useState(false)
@@ -100,9 +102,11 @@ export default function InputBar({
                     const json = await res.json()
                     if (json.text) {
                         onChange((valueRef.current ? valueRef.current + " " : "") + json.text)
+                    } else {
+                        onAudioError?.()
                     }
                 } catch {
-                    // silently fail
+                    onAudioError?.()
                 } finally {
                     setIsTranscribing(false)
                 }

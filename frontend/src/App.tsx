@@ -19,9 +19,13 @@ export default function App() {
     const [isPending, setIsPending] = useState(false)
     const [pendingImages, setPendingImages] = useState<{ data: string; type: string }[]>([])
     const [activeProcess, setActiveProcess] = useState<string | null>(null)
+    const [audioError, setAudioError] = useState(false)
     const rawBufferRef = useRef("")
     const pendingPagesRef = useRef<any[] | null>(null)
-    const { speak, stop } = useTTS()
+    const { speak, stop } = useTTS(() => {
+        setAudioError(true)
+        setTimeout(() => setAudioError(false), 5000)
+    })
 
     const sendMessage = useCallback(async () => {
         const text = input.trim()
@@ -127,6 +131,11 @@ export default function App() {
     return (
         <ThemeContext.Provider value={isDark}>
         <div className={`app ${isDark ? "dark" : "light"}`}>
+            {audioError && (
+                <div className="audio-error-toast">
+                    ElevenLabs not responding — TTS/STT temporarily unavailable
+                </div>
+            )}
             <div className="header-outer">
                 <header className="header">
                     <div className="header-left">
@@ -172,6 +181,7 @@ export default function App() {
                     onImagesAdd={(imgs) => setPendingImages((prev) => [...prev, ...imgs])}
                     onImageRemove={(i) => setPendingImages((prev) => prev.filter((_, j) => j !== i))}
                     hasMessages={messages.length > 0}
+                    onAudioError={() => { setAudioError(true); setTimeout(() => setAudioError(false), 5000) }}
                 />
             </div>
         </div>
