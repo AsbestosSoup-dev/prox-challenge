@@ -5,6 +5,7 @@ import InputBar from "./components/InputBar"
 import type {Message} from "./types"
 import proxLogo from "./assets/prox.svg?url"
 import {useTTS} from "./lib/useTTS"
+import { ThemeContext } from "./lib/ThemeContext"
 
 const BACKEND_URL = import.meta.env.VITE_BACKEND_URL ?? "http://127.0.0.1:8000"
 
@@ -124,6 +125,7 @@ export default function App() {
     }, [input, messages, isStreaming, pendingImages, audioEnabled, speak, stop])
 
     return (
+        <ThemeContext.Provider value={isDark}>
         <div className={`app ${isDark ? "dark" : "light"}`}>
             <div className="header-outer">
                 <header className="header">
@@ -173,5 +175,6 @@ export default function App() {
                 />
             </div>
         </div>
+        </ThemeContext.Provider>
     )
 }
