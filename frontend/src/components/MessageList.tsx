@@ -105,130 +105,204 @@ function EmptyState({ onSuggestion }: { onSuggestion: (s: string) => void }) {
     )
 }
 
-// Schematic-style SVG of a multi-process welder front panel
+// Accurate front panel schematic of the Vulcan OmniPro 220
+// Based on manual page 8 + product photos.
+// Layout (portrait): handle top, VULCAN/OMNIPRO header, LCD center with
+// HOME+BACK flanking, three knobs below (Left/Control/Right), power switch,
+// bottom connector row (torch socket, negative, positive).
 function MachineSVG() {
+    // viewBox: 260 wide × 380 tall — portrait, fits the actual panel proportions
+    const W = 260
+    const H = 380
+    const cx = W / 2
+
+    // Colors via CSS vars — SVG uses currentColor fallback
+    const bg       = "var(--bg)"
+    const surf     = "var(--surface)"
+    const surf2    = "var(--surface2)"
+    const surf3    = "var(--surface3)"
+    const border   = "var(--border)"
+    const borderBr = "var(--border-bright)"
+    const textDim  = "var(--text-dim)"
+    const textMut  = "var(--text-muted)"
+    const accent   = "var(--accent)"
+    const accentBr = "var(--accent-bright)"
+    const green    = "var(--green)"
+    const mono     = "'JetBrains Mono', monospace"
+
     return (
         <svg
-            viewBox="0 0 460 240"
+            viewBox={`0 0 ${W} ${H}`}
             fill="none"
             xmlns="http://www.w3.org/2000/svg"
-            style={{ width: "100%", height: "auto", display: "block" }}
+            style={{ width: "100%", maxWidth: 240, height: "auto", display: "block", margin: "0 auto" }}
             aria-hidden="true"
         >
-            {/* Machine body */}
-            <rect x="8" y="20" width="444" height="200" rx="10" fill="var(--surface)" stroke="var(--border)" strokeWidth="1.5" />
+            {/* ── Outer body ─────────────────────────────────────────── */}
+            <rect x="10" y="28" width={W - 20} height={H - 36} rx="10"
+                fill={surf} stroke={border} strokeWidth="1.5" />
 
-            {/* Top handle rail */}
-            <rect x="160" y="8" width="140" height="16" rx="8" fill="var(--surface2)" stroke="var(--border)" strokeWidth="1" />
+            {/* ── Carry handle (tube, top center) ────────────────────── */}
+            {/* Left leg */}
+            <rect x="68" y="16" width="10" height="24" rx="5" fill={surf2} stroke={border} strokeWidth="1" />
+            {/* Right leg */}
+            <rect x={W - 78} y="16" width="10" height="24" rx="5" fill={surf2} stroke={border} strokeWidth="1" />
+            {/* Bar */}
+            <rect x="70" y="10" width={W - 140} height="14" rx="7" fill={surf3} stroke={borderBr} strokeWidth="1" />
 
-            {/* Left panel — ports */}
-            <rect x="22" y="36" width="100" height="168" rx="6" fill="var(--surface2)" stroke="var(--border)" strokeWidth="1" />
+            {/* ── Header band ────────────────────────────────────────── */}
+            {/* Orange left accent strip (mimics orange side panel peeking in) */}
+            <rect x="10" y="28" width="18" height="44" rx="5"
+                fill="#c85a00" stroke="none" />
+            {/* "VULCAN" text */}
+            <text x="38" y="50" fill={textMut} fontSize="10" fontFamily={mono}
+                fontWeight="700" letterSpacing="1.5">VULCAN</text>
+            {/* "OMNIPRO" orange + "220" */}
+            <text x={W - 22} y="43" fill={accent} fontSize="8" fontFamily={mono}
+                fontWeight="600" letterSpacing="0.5" textAnchor="end">OMNIPRO</text>
+            <text x={W - 22} y="54" fill={accentBr} fontSize="11" fontFamily={mono}
+                fontWeight="700" letterSpacing="0.5" textAnchor="end">220</text>
 
-            {/* Negative port */}
-            <circle cx="52" cy="72" r="14" fill="var(--bg)" stroke="var(--border-bright)" strokeWidth="1.5" />
-            <circle cx="52" cy="72" r="7" fill="var(--surface3)" />
-            <text x="52" y="76.5" textAnchor="middle" fill="var(--text-dim)" fontSize="9" fontFamily="monospace">−</text>
-            <text x="52" y="94" textAnchor="middle" fill="var(--text-dim)" fontSize="9" fontFamily="monospace">WORK</text>
+            {/* Thin divider */}
+            <line x1="14" y1="74" x2={W - 14} y2="74" stroke={border} strokeWidth="0.75" />
 
-            {/* Positive port */}
-            <circle cx="92" cy="72" r="14" fill="var(--bg)" stroke="var(--border-bright)" strokeWidth="1.5" />
-            <circle cx="92" cy="72" r="7" fill="var(--surface3)" />
-            <text x="92" y="76.5" textAnchor="middle" fill="var(--text-dim)" fontSize="9" fontFamily="monospace">+</text>
-            <text x="92" y="94" textAnchor="middle" fill="var(--text-dim)" fontSize="9" fontFamily="monospace">GUN</text>
-
-            {/* Gas port */}
-            <rect x="44" y="106" width="36" height="20" rx="4" fill="var(--bg)" stroke="var(--border)" strokeWidth="1" />
-            <text x="62" y="120" textAnchor="middle" fill="var(--text-dim)" fontSize="8" fontFamily="monospace">GAS</text>
-
-            {/* Ground clamp port */}
-            <rect x="44" y="136" width="36" height="20" rx="4" fill="var(--bg)" stroke="var(--border)" strokeWidth="1" />
-            <text x="62" y="150" textAnchor="middle" fill="var(--text-dim)" fontSize="8" fontFamily="monospace">CLAMP</text>
-
-            {/* Center panel — display */}
-            <rect x="134" y="36" width="192" height="168" rx="6" fill="var(--bg)" stroke="var(--border)" strokeWidth="1" />
-
-            {/* Process selector label row */}
-            {["MIG","TIG","FLUX","STICK","ARC"].map((label, i) => (
-                <g key={label}>
-                    <rect
-                        x={140 + i * 37}
-                        y="44"
-                        width="33"
-                        height="18"
-                        rx="3"
-                        fill={i === 0 ? "var(--accent-dim)" : "var(--surface2)"}
-                        stroke={i === 0 ? "var(--accent)" : "var(--border)"}
-                        strokeWidth="0.75"
-                    />
-                    <text
-                        x={156.5 + i * 37}
-                        y="57"
-                        textAnchor="middle"
-                        fill={i === 0 ? "var(--accent)" : "var(--text-dim)"}
-                        fontSize="7.5"
-                        fontFamily="monospace"
-                        fontWeight={i === 0 ? "600" : "400"}
-                    >{label}</text>
-                </g>
+            {/* ── LCD display ────────────────────────────────────────── */}
+            {/* LCD outer bezel */}
+            <rect x="44" y="82" width={W - 88} height="88" rx="5"
+                fill={surf2} stroke={borderBr} strokeWidth="1" />
+            {/* LCD screen (white-ish, like a real transflective LCD) */}
+            <rect x="50" y="88" width={W - 100} height="76" rx="3"
+                fill="#dde8e0" stroke="#aab8b0" strokeWidth="0.75" />
+            {/* Process name on LCD */}
+            <text x={cx} y="118" textAnchor="middle"
+                fill="#1a2820" fontSize="13" fontFamily={mono} fontWeight="600"
+                letterSpacing="0.5">MIG Steel C25</text>
+            {/* Weld icon — simplified torch silhouette */}
+            <g transform={`translate(${cx - 14}, 122)`}>
+                {/* torch body */}
+                <rect x="2" y="6" width="24" height="8" rx="3" fill="#3a5040" />
+                {/* nozzle */}
+                <rect x="22" y="8" width="8" height="4" rx="2" fill="#2a3830" />
+                {/* arc sparks */}
+                <line x1="30" y1="10" x2="36" y2="6" stroke="#c8922a" strokeWidth="1.5" strokeLinecap="round" />
+                <line x1="30" y1="10" x2="36" y2="10" stroke="#c8922a" strokeWidth="1.5" strokeLinecap="round" />
+                <line x1="30" y1="10" x2="36" y2="14" stroke="#c8922a" strokeWidth="1.5" strokeLinecap="round" />
+                {/* handle */}
+                <rect x="0" y="4" width="6" height="12" rx="2" fill="#2a3830" />
+            </g>
+            {/* Bottom info bar on LCD */}
+            <rect x="50" y="154" width={W - 100} height="10" rx="0"
+                fill="#b8c8c0" />
+            {/* Small setting icons row */}
+            {[0,1,2,3,4,5,6,7,8].map(i => (
+                <rect key={i} x={53 + i * 15} y="156" width="10" height="6"
+                    rx="1" fill={i === 3 ? "#6a8878" : "#c8d8d0"} />
             ))}
 
-            {/* Main digital display */}
-            <rect x="140" y="70" width="180" height="60" rx="4" fill="#060809" stroke="var(--border)" strokeWidth="1" />
-            {/* Segment display — amperage */}
-            <text x="165" y="113" fill="var(--accent-bright)" fontSize="38" fontFamily="monospace" fontWeight="700" letterSpacing="-2">175</text>
-            <text x="308" y="113" fill="var(--text-dim)" fontSize="14" fontFamily="monospace">A</text>
+            {/* HOME button — left of LCD */}
+            <rect x="16" y="96" width="24" height="22" rx="4"
+                fill={surf3} stroke={borderBr} strokeWidth="1" />
+            <text x="28" y="111" textAnchor="middle"
+                fill={textDim} fontSize="7" fontFamily={mono}>HOME</text>
 
-            {/* Voltage sub-display */}
-            <rect x="140" y="138" width="84" height="30" rx="3" fill="#060809" stroke="var(--border)" strokeWidth="0.75" />
-            <text x="152" y="158" fill="var(--text-muted)" fontSize="20" fontFamily="monospace" fontWeight="600">22.5</text>
-            <text x="218" y="158" fill="var(--text-dim)" fontSize="10" fontFamily="monospace">V</text>
+            {/* BACK button — right of LCD */}
+            <rect x={W - 40} y="96" width="24" height="22" rx="4"
+                fill={surf3} stroke={borderBr} strokeWidth="1" />
+            <text x={W - 28} y="111" textAnchor="middle"
+                fill={textDim} fontSize="7" fontFamily={mono}>BACK</text>
 
-            {/* Wire speed sub-display */}
-            <rect x="236" y="138" width="84" height="30" rx="3" fill="#060809" stroke="var(--border)" strokeWidth="0.75" />
-            <text x="248" y="158" fill="var(--text-muted)" fontSize="20" fontFamily="monospace" fontWeight="600">280</text>
-            <text x="314" y="158" fill="var(--text-dim)" fontSize="10" fontFamily="monospace">ipm</text>
+            {/* ── Three knobs row ─────────────────────────────────────── */}
+            {/* Left knob: wire feed / current (⊕ A) */}
+            {/* Center knob: main control (larger) */}
+            {/* Right knob: voltage (V) */}
 
-            {/* Labels under sub-displays */}
-            <text x="182" y="178" textAnchor="middle" fill="var(--text-dim)" fontSize="8" fontFamily="monospace" letterSpacing="0.5">VOLTAGE</text>
-            <text x="278" y="178" textAnchor="middle" fill="var(--text-dim)" fontSize="8" fontFamily="monospace" letterSpacing="0.5">WIRE SPD</text>
+            {/* knob helper: outer ring, inner knob body, indicator line */}
+            {/* Left knob */}
+            <circle cx="58" cy="224" r="26" fill={surf2} stroke={border} strokeWidth="1" />
+            <circle cx="58" cy="224" r="20" fill={surf3} stroke={borderBr} strokeWidth="1.5" />
+            <circle cx="58" cy="224" r="12" fill={surf2} stroke={border} strokeWidth="0.75" />
+            {/* orange arrow indicator */}
+            <polygon points="54,208 58,200 62,208" fill={accent} />
+            <text x="58" y="258" textAnchor="middle" fill={textDim} fontSize="8" fontFamily={mono}>⊕  A</text>
 
-            {/* Right panel — knobs */}
-            <rect x="338" y="36" width="106" height="168" rx="6" fill="var(--surface2)" stroke="var(--border)" strokeWidth="1" />
+            {/* Center main control knob (larger) */}
+            <circle cx={cx} cy="222" r="30" fill={surf2} stroke={border} strokeWidth="1" />
+            <circle cx={cx} cy="222" r="23" fill={surf3} stroke={borderBr} strokeWidth="1.5" />
+            <circle cx={cx} cy="222" r="14" fill={surf2} stroke={border} strokeWidth="0.75" />
+            <polygon points={`${cx-5},205 ${cx},196 ${cx+5},205`} fill={accent} />
+            <text x={cx} y="260" textAnchor="middle" fill={textDim} fontSize="8" fontFamily={mono}>CONTROL</text>
 
-            {/* Amperage knob */}
-            <circle cx="368" cy="90" r="22" fill="var(--surface3)" stroke="var(--border-bright)" strokeWidth="1.5" />
-            <circle cx="368" cy="90" r="14" fill="var(--surface2)" stroke="var(--border)" strokeWidth="1" />
-            <line x1="368" y1="80" x2="368" y2="72" stroke="var(--accent)" strokeWidth="2" strokeLinecap="round" />
-            <text x="368" y="120" textAnchor="middle" fill="var(--text-dim)" fontSize="8" fontFamily="monospace">AMPS</text>
+            {/* Right knob: voltage */}
+            <circle cx={W - 58} cy="224" r="26" fill={surf2} stroke={border} strokeWidth="1" />
+            <circle cx={W - 58} cy="224" r="20" fill={surf3} stroke={borderBr} strokeWidth="1.5" />
+            <circle cx={W - 58} cy="224" r="12" fill={surf2} stroke={border} strokeWidth="0.75" />
+            <polygon points={`${W-62},208 ${W-58},200 ${W-54},208`} fill={accent} />
+            <text x={W - 58} y="258" textAnchor="middle" fill={textDim} fontSize="8" fontFamily={mono}>V</text>
 
-            {/* Voltage knob */}
-            <circle cx="414" cy="90" r="22" fill="var(--surface3)" stroke="var(--border-bright)" strokeWidth="1.5" />
-            <circle cx="414" cy="90" r="14" fill="var(--surface2)" stroke="var(--border)" strokeWidth="1" />
-            <line x1="414" y1="80" x2="421" y2="74" stroke="var(--accent)" strokeWidth="2" strokeLinecap="round" />
-            <text x="414" y="120" textAnchor="middle" fill="var(--text-dim)" fontSize="8" fontFamily="monospace">VOLTS</text>
+            {/* ── Power switch ────────────────────────────────────────── */}
+            <rect x={cx - 14} y="270" width="28" height="16" rx="4"
+                fill={surf3} stroke={borderBr} strokeWidth="1" />
+            {/* rocker: I side lit, O side dark */}
+            <rect x={cx - 13} y="271" width="12" height="14" rx="3" fill="#2a3a2a" />
+            <text x={cx - 7} y="282" textAnchor="middle" fill={green} fontSize="8" fontFamily={mono} fontWeight="700">I</text>
+            <rect x={cx + 1} y="271" width="12" height="14" rx="3" fill={surf2} />
+            <text x={cx + 7} y="282" textAnchor="middle" fill={textDim} fontSize="8" fontFamily={mono}>O</text>
+            <text x={cx} y="296" textAnchor="middle" fill={textDim} fontSize="7" fontFamily={mono}>POWER</text>
 
-            {/* Power button */}
-            <circle cx="368" cy="162" r="16" fill="var(--bg)" stroke="var(--border-bright)" strokeWidth="1.5" />
-            <path d="M368 150 v6 M362 153 a10 10 0 1 0 12 0" stroke="var(--green)" strokeWidth="2" fill="none" strokeLinecap="round" />
+            {/* Spool Gun Gas Outlet — small barbed nipple, right side mid-panel */}
+            <circle cx={W - 20} cy="178" r="6" fill={surf3} stroke={borderBr} strokeWidth="1" />
+            <circle cx={W - 20} cy="178" r="3" fill={bg} />
+            <text x={W - 20} y="192" textAnchor="middle" fill={textDim} fontSize="6" fontFamily={mono}>GAS</text>
 
-            {/* Trigger / torch connector */}
-            <rect x="396" y="148" width="32" height="28" rx="5" fill="var(--bg)" stroke="var(--border)" strokeWidth="1" />
-            <circle cx="406" cy="158" r="3" fill="var(--border)" />
-            <circle cx="416" cy="158" r="3" fill="var(--border)" />
-            <circle cx="406" cy="168" r="3" fill="var(--border)" />
-            <circle cx="416" cy="168" r="3" fill="var(--border)" />
-            <text x="412" y="184" textAnchor="middle" fill="var(--text-dim)" fontSize="7.5" fontFamily="monospace">TORCH</text>
+            {/* ── Bottom connector row ────────────────────────────────── */}
+            {/* Divider above connectors */}
+            <line x1="14" y1="306" x2={W - 14} y2="306" stroke={border} strokeWidth="0.75" />
 
-            {/* Bottom vent grille lines */}
-            {Array.from({ length: 8 }, (_, k) => (
-                <line key={k} x1={24 + k * 8} y1="208" x2={24 + k * 8} y2="216" stroke="var(--border)" strokeWidth="1" strokeLinecap="round" />
+            {/* MIG Gun / Spool Gun Cable Socket — left, multi-pin round */}
+            <circle cx="58" cy="330" r="18" fill={surf2} stroke={borderBr} strokeWidth="1.5" />
+            <circle cx="58" cy="330" r="12" fill={bg} stroke={border} strokeWidth="0.75" />
+            {/* pin holes */}
+            {[0,1,2,3,4,5,6].map(i => {
+                const angle = (i / 7) * Math.PI * 2
+                const px = 58 + 7 * Math.cos(angle)
+                const py = 330 + 7 * Math.sin(angle)
+                return <circle key={i} cx={px} cy={py} r="1.5" fill={borderBr} />
+            })}
+            <circle cx="58" cy="330" r="2" fill={borderBr} />
+            <text x="58" y="355" textAnchor="middle" fill={textDim} fontSize="7" fontFamily={mono}>MIG GUN</text>
+            <text x="58" y="363" textAnchor="middle" fill={textDim} fontSize="7" fontFamily={mono}>SOCKET</text>
+
+            {/* Negative socket — center-left, twist-lock gold */}
+            <circle cx={cx - 18} cy="330" r="16" fill={surf2} stroke={borderBr} strokeWidth="1.5" />
+            <circle cx={cx - 18} cy="330" r="10" fill="#8a7030" stroke="#b09040" strokeWidth="1" />
+            <text x={cx - 18} y="334" textAnchor="middle" fill="#e0c060" fontSize="11" fontFamily={mono} fontWeight="700">−</text>
+            <text x={cx - 18} y="353" textAnchor="middle" fill={textDim} fontSize="7" fontFamily={mono}>NEG</text>
+
+            {/* Positive socket — center-right, twist-lock gold */}
+            <circle cx={cx + 18} cy="330" r="16" fill={surf2} stroke={borderBr} strokeWidth="1.5" />
+            <circle cx={cx + 18} cy="330" r="10" fill="#8a7030" stroke="#b09040" strokeWidth="1" />
+            <text x={cx + 18} y="334" textAnchor="middle" fill="#e0c060" fontSize="11" fontFamily={mono} fontWeight="700">+</text>
+            <text x={cx + 18} y="353" textAnchor="middle" fill={textDim} fontSize="7" fontFamily={mono}>POS</text>
+
+            {/* Storage compartment door — right side */}
+            <rect x={W - 38} y="310" width="24" height="40" rx="4"
+                fill={surf3} stroke={border} strokeWidth="1" />
+            <line x1={W - 32} y1="326" x2={W - 20} y2="326" stroke={border} strokeWidth="0.75" />
+            <text x={W - 26} y="338" textAnchor="middle" fill={textDim} fontSize="6" fontFamily={mono}>STOR</text>
+
+            {/* ── Bottom vent grille ───────────────────────────────────── */}
+            {Array.from({ length: 7 }, (_, k) => (
+                <line key={k}
+                    x1={16 + k * 8} y1={H - 10}
+                    x2={16 + k * 8} y2={H - 4}
+                    stroke={border} strokeWidth="1" strokeLinecap="round" />
             ))}
-            {Array.from({ length: 8 }, (_, k) => (
-                <line key={k + 100} x1={336 + k * 8} y1="208" x2={336 + k * 8} y2="216" stroke="var(--border)" strokeWidth="1" strokeLinecap="round" />
+            {Array.from({ length: 7 }, (_, k) => (
+                <line key={k + 20}
+                    x1={W - 16 - k * 8} y1={H - 10}
+                    x2={W - 16 - k * 8} y2={H - 4}
+                    stroke={border} strokeWidth="1" strokeLinecap="round" />
             ))}
-
-            {/* Brand label */}
-            <text x="230" y="222" textAnchor="middle" fill="var(--text-dim)" fontSize="9" fontFamily="monospace" letterSpacing="2">VULCAN  OMNIPRO  220</text>
         </svg>
     )
 }
