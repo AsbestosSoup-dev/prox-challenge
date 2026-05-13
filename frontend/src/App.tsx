@@ -43,6 +43,7 @@ export default function App() {
         const newMessages = [...messages, userMsg]
         setMessages(newMessages)
         setInput("")
+        setActiveProcess(null)
         setPendingImages([])
         stop()
         setIsStreaming(true)
@@ -174,7 +175,7 @@ export default function App() {
             <div className="input-outer">
                 <InputBar
                     value={input}
-                    onChange={setInput}
+                    onChange={(v) => { setInput(v); if (!v) setActiveProcess(null) }}
                     onSend={sendMessage}
                     isStreaming={isStreaming}
                     pendingImages={pendingImages}
