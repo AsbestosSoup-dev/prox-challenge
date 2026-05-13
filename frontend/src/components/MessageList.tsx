@@ -3,11 +3,38 @@ import { ScrollArea } from "@/components/ui/scroll-area"
 import MessageBubble from "./MessageBubble"
 import type { Message } from "../types"
 
+const PROCESSES = [
+    { id: "MIG",       label: "MIG",        query: "I want to set up for MIG welding. What do I need to know?" },
+    { id: "TIG",       label: "TIG",        query: "I want to set up for TIG welding. Walk me through it." },
+    { id: "Stick",     label: "Stick",      query: "I want to weld with Stick. What settings and polarity do I use?" },
+    { id: "Flux-Core", label: "Flux-Core",  query: "I want to run flux-cored wire. What's the polarity setup and settings?" },
+]
+
+const LCD_LABELS: Record<string, string> = {
+    "MIG":       "MIG",
+    "TIG":       "TIG",
+    "Stick":     "STICK",
+    "Flux-Core": "FLUX-CORE",
+}
+
+function detectProcess(messages: (Message & { _raw?: string })[]): string | null {
+    for (let i = messages.length - 1; i >= 0; i--) {
+        const text = (messages[i]._raw ?? messages[i].content).toUpperCase()
+        if (text.includes("FLUX") || text.includes("FCAW")) return "Flux-Core"
+        if (text.includes("TIG") || text.includes("GTAW")) return "TIG"
+        if (text.includes("STICK") || text.includes("SMAW")) return "Stick"
+        if (text.includes("MIG") || text.includes("GMAW")) return "MIG"
+    }
+    return null
+}
+
 interface Props {
     messages: (Message & { _raw?: string })[]
     isStreaming: boolean
     isPending: boolean
     onSuggestion: (text: string) => void
+    activeProcess: string | null
+    onProcessSelect: (process: string, query: string) => void
 }
 
 // Pair up messages into turns: [user, assistant?]
@@ -33,7 +60,7 @@ function groupIntoTurns(messages: (Message & { _raw?: string })[]) {
     return turns
 }
 
-export default function MessageList({ messages, isStreaming, isPending, onSuggestion }: Props) {
+export default function MessageList({ messages, isStreaming, isPending, onSuggestion, activeProcess, onProcessSelect }: Props) {
     const bottomRef = useRef<HTMLDivElement>(null)
 
     useEffect(() => {
@@ -41,12 +68,13 @@ export default function MessageList({ messages, isStreaming, isPending, onSugges
     }, [messages])
 
     const isEmpty = messages.length === 0
+    const lcdProcess = activeProcess ?? detectProcess(messages)
 
     return (
         <ScrollArea className="messages-scroll">
             <div className="messages-inner">
                 {isEmpty ? (
-                    <EmptyState onSuggestion={onSuggestion} />
+                    <EmptyState onSuggestion={onSuggestion} onProcessSelect={onProcessSelect} activeProcess={activeProcess} />
                 ) : (
                     <>
                         {groupIntoTurns(messages).map((turn, t) => {
@@ -79,14 +107,29 @@ export default function MessageList({ messages, isStreaming, isPending, onSugges
     )
 }
 
-function EmptyState({ onSuggestion: _ }: { onSuggestion: (s: string) => void }) {
+function EmptyState({ onSuggestion: _, onProcessSelect, activeProcess }: {
+    onSuggestion: (s: string) => void
+    onProcessSelect: (process: string, query: string) => void
+    activeProcess: string | null
+}) {
     return (
         <div className="welcome">
             <div className="welcome-machine">
-                <MachineSVG />
+                <MachineSVG lcdProcess={activeProcess} />
             </div>
             <p className="welcome-title">What do you need to know?</p>
             <p className="welcome-sub">Vulcan OmniPro 220</p>
+            <div className="process-chips">
+                {PROCESSES.map((p) => (
+                    <button
+                        key={p.id}
+                        className={`process-chip${activeProcess === p.id ? " process-chip--active" : ""}`}
+                        onClick={() => onProcessSelect(p.id, p.query)}
+                    >
+                        {p.label}
+                    </button>
+                ))}
+            </div>
         </div>
     )
 }
@@ -103,7 +146,7 @@ function EmptyState({ onSuggestion: _ }: { onSuggestion: (s: string) => void }) 
 //      Power switch (center), Cooling fins / Storage (right)
 //   5. Bottom connector base: Gas Outlet (far-left small), torch icon,
 //      Negative Socket, Wire Feed Power Cable, Positive Socket
-function MachineSVG() {
+function MachineSVG({ lcdProcess }: { lcdProcess?: string | null }) {
     const W = 260
     const H = 370
     const cx = W / 2
@@ -174,7 +217,9 @@ function MachineSVG() {
                 fill="#dde8e2" stroke="#9ab0a8" strokeWidth="1" />
             {/* Process name */}
             <text x={cx} y="96" textAnchor="middle"
-                fill="#1a2820" fontSize="11" fontFamily={mono} fontWeight="600">MIG Steel C25</text>
+                fill="#1a2820" fontSize="11" fontFamily={mono} fontWeight="600">
+                {lcdProcess ? LCD_LABELS[lcdProcess] ?? lcdProcess : "OMNIPRO 220"}
+            </text>
             {/* Torch icon */}
             <g transform={`translate(${cx - 18}, 98)`}>
                 <rect x="4" y="5" width="20" height="7" rx="3" fill="#3a5040" />

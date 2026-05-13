@@ -17,6 +17,7 @@ export default function App() {
     const [isStreaming, setIsStreaming] = useState(false)
     const [isPending, setIsPending] = useState(false)
     const [pendingImages, setPendingImages] = useState<{ data: string; type: string }[]>([])
+    const [activeProcess, setActiveProcess] = useState<string | null>(null)
     const rawBufferRef = useRef("")
     const pendingPagesRef = useRef<any[] | null>(null)
     const { speak, stop } = useTTS()
@@ -152,6 +153,11 @@ export default function App() {
                 isStreaming={isStreaming}
                 isPending={isPending}
                 onSuggestion={(s) => setInput(s)}
+                activeProcess={activeProcess}
+                onProcessSelect={(process, query) => {
+                    setActiveProcess(process)
+                    setInput(query)
+                }}
             />
 
             <div className="input-outer">
