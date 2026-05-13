@@ -147,7 +147,6 @@ function MachineSVG() {
                 points={`${kx - 5},${ky + r - 8} ${kx + 5},${ky + r - 8} ${kx},${ky + r + 1}`}
                 fill={accent}
             />
-            <text x={kx} y={ky + r + 16} textAnchor="middle" fill={textDim} fontSize="7" fontFamily={mono}>{label}</text>
         </g>
     )
 
@@ -181,15 +180,13 @@ function MachineSVG() {
             <text x={W - 22} y="50" textAnchor="end" fill={textMut} fontSize="7" fontFamily={mono} letterSpacing="0.5">OMNIPRO®</text>
             <text x={W - 22} y="62" textAnchor="end" fill={accent} fontSize="12" fontFamily={mono} fontWeight="700">220</text>
 
-            {/* HOME button — vertically centered on LCD (y=66, h=70 → center=101) */}
+            {/* HOME button — vertically centered on LCD */}
             <rect x="20" y="91" width="22" height="20" rx="3"
                 fill={surf3} stroke={borderBr} strokeWidth="1" />
-            <text x="31" y="105" textAnchor="middle" fill={textDim} fontSize="6" fontFamily={mono}>HOME</text>
 
             {/* BACK button — vertically centered on LCD */}
             <rect x={W - 42} y="91" width="22" height="20" rx="3"
                 fill={surf3} stroke={borderBr} strokeWidth="1" />
-            <text x={W - 31} y="105" textAnchor="middle" fill={textDim} fontSize="6" fontFamily={mono}>BACK</text>
 
             {/* LCD — inset, center of panel */}
             <rect x="48" y="66" width={W - 96} height="70" rx="4"
@@ -240,7 +237,6 @@ function MachineSVG() {
                 return <circle key={i} cx={71 + 5 * Math.cos(a)} cy={267 + 5 * Math.sin(a)} r="1.5" fill={borderBr} />
             })}
             <circle cx="71" cy="267" r="1.5" fill={borderBr} />
-            <text x="44" y="300" textAnchor="middle" fill={textDim} fontSize="6" fontFamily={mono}>MIG/GUN</text>
 
             {/* CENTER: Power switch */}
             <rect x="98" y="248" width="30" height="36" rx="3"
@@ -262,32 +258,25 @@ function MachineSVG() {
             <rect x="12" y="300" width={W - 24} height="56" rx="6"
                 fill="#141820" stroke={borderBr} strokeWidth="1.5" />
 
-            {/* Spool Gun Gas Outlet — same size/style as NEG/POS */}
-            <circle cx="52" cy="322" r="17" fill={surf2} stroke={borderBr} strokeWidth="1.5" />
-            <circle cx="52" cy="322" r="12" fill="#8a6818" stroke="#c09030" strokeWidth="1.5" />
-            <circle cx="52" cy="322" r="5.5" fill="#5a4010" />
-            <text x="52" y="308" textAnchor="middle" fill={textMut} fontSize="7" fontFamily={mono}>⊙</text>
-            <text x="52" y="347" textAnchor="middle" fill={textDim} fontSize="6" fontFamily={mono}>GAS</text>
+            {/* Spool Gun Gas Outlet */}
+            <circle cx="52" cy="328" r="17" fill={surf2} stroke={borderBr} strokeWidth="1.5" />
+            <circle cx="52" cy="328" r="12" fill="#8a6818" stroke="#c09030" strokeWidth="1.5" />
+            <circle cx="52" cy="328" r="5.5" fill="#5a4010" />
 
             {/* Negative Socket (−) — center */}
-            <circle cx="130" cy="322" r="17" fill={surf2} stroke={borderBr} strokeWidth="1.5" />
-            <circle cx="130" cy="322" r="12" fill="#8a6818" stroke="#c09030" strokeWidth="1.5" />
-            <circle cx="130" cy="322" r="5.5" fill="#5a4010" />
-            <text x="130" y="308" textAnchor="middle" fill={textMut} fontSize="8" fontFamily={mono} fontWeight="700">−</text>
-            <text x="130" y="347" textAnchor="middle" fill={textDim} fontSize="6" fontFamily={mono}>NEG</text>
+            <circle cx="130" cy="328" r="17" fill={surf2} stroke={borderBr} strokeWidth="1.5" />
+            <circle cx="130" cy="328" r="12" fill="#8a6818" stroke="#c09030" strokeWidth="1.5" />
+            <circle cx="130" cy="328" r="5.5" fill="#5a4010" />
 
-            {/* Wire Feed Power Cable — smaller, midpoint between NEG(130) and POS(208) = 169 */}
-            <circle cx="169" cy="334" r="10" fill={surf2} stroke={borderBr} strokeWidth="1.25" />
-            <circle cx="169" cy="334" r="6.5" fill="#8a6818" stroke="#c09030" strokeWidth="1" />
-            <circle cx="169" cy="334" r="3" fill="#5a4010" />
-            <text x="169" y="350" textAnchor="middle" fill={textDim} fontSize="5.5" fontFamily={mono}>WIRE</text>
+            {/* Wire Feed Power Cable — smaller, midpoint between NEG(130) and POS(208) = 169, slightly lower */}
+            <circle cx="169" cy="338" r="10" fill={surf2} stroke={borderBr} strokeWidth="1.25" />
+            <circle cx="169" cy="338" r="6.5" fill="#8a6818" stroke="#c09030" strokeWidth="1" />
+            <circle cx="169" cy="338" r="3" fill="#5a4010" />
 
-            {/* Positive Socket (+) — symmetric to GAS, 40px from right inner edge */}
-            <circle cx="208" cy="322" r="17" fill={surf2} stroke={borderBr} strokeWidth="1.5" />
-            <circle cx="208" cy="322" r="12" fill="#8a6818" stroke="#c09030" strokeWidth="1.5" />
-            <circle cx="208" cy="322" r="5.5" fill="#5a4010" />
-            <text x="208" y="308" textAnchor="middle" fill={textMut} fontSize="8" fontFamily={mono} fontWeight="700">+</text>
-            <text x="208" y="347" textAnchor="middle" fill={textDim} fontSize="6" fontFamily={mono}>POS</text>
+            {/* Positive Socket (+) */}
+            <circle cx="208" cy="328" r="17" fill={surf2} stroke={borderBr} strokeWidth="1.5" />
+            <circle cx="208" cy="328" r="12" fill="#8a6818" stroke="#c09030" strokeWidth="1.5" />
+            <circle cx="208" cy="328" r="5.5" fill="#5a4010" />
         </svg>
     )
 }
