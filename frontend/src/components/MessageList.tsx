@@ -181,15 +181,15 @@ function MachineSVG() {
             <text x={W - 22} y="50" textAnchor="end" fill={textMut} fontSize="7" fontFamily={mono} letterSpacing="0.5">OMNIPRO®</text>
             <text x={W - 22} y="62" textAnchor="end" fill={accent} fontSize="12" fontFamily={mono} fontWeight="700">220</text>
 
-            {/* HOME button — square, left side below logo */}
-            <rect x="20" y="70" width="22" height="20" rx="3"
+            {/* HOME button — vertically centered on LCD (y=66, h=70 → center=101) */}
+            <rect x="20" y="91" width="22" height="20" rx="3"
                 fill={surf3} stroke={borderBr} strokeWidth="1" />
-            <text x="31" y="84" textAnchor="middle" fill={textDim} fontSize="6" fontFamily={mono}>HOME</text>
+            <text x="31" y="105" textAnchor="middle" fill={textDim} fontSize="6" fontFamily={mono}>HOME</text>
 
-            {/* BACK button — square, right side */}
-            <rect x={W - 42} y="70" width="22" height="20" rx="3"
+            {/* BACK button — vertically centered on LCD */}
+            <rect x={W - 42} y="91" width="22" height="20" rx="3"
                 fill={surf3} stroke={borderBr} strokeWidth="1" />
-            <text x={W - 31} y="84" textAnchor="middle" fill={textDim} fontSize="6" fontFamily={mono}>BACK</text>
+            <text x={W - 31} y="105" textAnchor="middle" fill={textDim} fontSize="6" fontFamily={mono}>BACK</text>
 
             {/* LCD — inset, center of panel */}
             <rect x="48" y="66" width={W - 96} height="70" rx="4"
@@ -213,15 +213,10 @@ function MachineSVG() {
                     rx="1" fill={i === 3 ? "#6a8878" : "#c8d8d0"} />
             ))}
 
-            {/* ⊕ A label left of knobs row */}
-            <text x="24" y="175" textAnchor="middle" fill={textDim} fontSize="7" fontFamily={mono}>⊕ A</text>
-            {/* V label right of knobs row */}
-            <text x={W - 24} y="175" textAnchor="middle" fill={textDim} fontSize="7" fontFamily={mono}>V</text>
-
             {/* Three knobs — evenly spaced, same size, below LCD */}
-            <Knob cx={58}  cy={168} r={18} label="LEFT" />
+            <Knob cx={58}  cy={168} r={18} label="A" />
             <Knob cx={cx}  cy={168} r={18} label="CTRL" />
-            <Knob cx={W - 58} cy={168} r={18} label="RIGHT" />
+            <Knob cx={W - 58} cy={168} r={18} label="V" />
 
             {/* ── 3. VULCAN fascia band ────────────────────────────────── */}
             <rect x="12" y="206" width={W - 24} height="28" rx="4"
@@ -274,26 +269,25 @@ function MachineSVG() {
             <text x="52" y="308" textAnchor="middle" fill={textMut} fontSize="7" fontFamily={mono}>⊙</text>
             <text x="52" y="347" textAnchor="middle" fill={textDim} fontSize="6" fontFamily={mono}>GAS</text>
 
-            {/* Negative Socket (−) — dead center of section */}
-            <circle cx={cx} cy="322" r="17" fill={surf2} stroke={borderBr} strokeWidth="1.5" />
-            <circle cx={cx} cy="322" r="12" fill="#8a6818" stroke="#c09030" strokeWidth="1.5" />
-            <circle cx={cx} cy="322" r="5.5" fill="#5a4010" />
-            <text x={cx} y="308" textAnchor="middle" fill={textMut} fontSize="8" fontFamily={mono} fontWeight="700">−</text>
-            <text x={cx} y="347" textAnchor="middle" fill={textDim} fontSize="6" fontFamily={mono}>NEG</text>
+            {/* Negative Socket (−) — center */}
+            <circle cx="130" cy="322" r="17" fill={surf2} stroke={borderBr} strokeWidth="1.5" />
+            <circle cx="130" cy="322" r="12" fill="#8a6818" stroke="#c09030" strokeWidth="1.5" />
+            <circle cx="130" cy="322" r="5.5" fill="#5a4010" />
+            <text x="130" y="308" textAnchor="middle" fill={textMut} fontSize="8" fontFamily={mono} fontWeight="700">−</text>
+            <text x="130" y="347" textAnchor="middle" fill={textDim} fontSize="6" fontFamily={mono}>NEG</text>
 
-            {/* Wire Feed Power Cable — smaller, between NEG and POS, lower */}
-            {/* sits below vertical center, between cx and POS */}
-            <circle cx="185" cy="334" r="10" fill={surf2} stroke={borderBr} strokeWidth="1.25" />
-            <circle cx="185" cy="334" r="6.5" fill="#8a6818" stroke="#c09030" strokeWidth="1" />
-            <circle cx="185" cy="334" r="3" fill="#5a4010" />
-            <text x="185" y="350" textAnchor="middle" fill={textDim} fontSize="5.5" fontFamily={mono}>WIRE</text>
+            {/* Wire Feed Power Cable — smaller, midpoint between NEG(130) and POS(208) = 169 */}
+            <circle cx="169" cy="334" r="10" fill={surf2} stroke={borderBr} strokeWidth="1.25" />
+            <circle cx="169" cy="334" r="6.5" fill="#8a6818" stroke="#c09030" strokeWidth="1" />
+            <circle cx="169" cy="334" r="3" fill="#5a4010" />
+            <text x="169" y="350" textAnchor="middle" fill={textDim} fontSize="5.5" fontFamily={mono}>WIRE</text>
 
-            {/* Positive Socket (+) — right */}
-            <circle cx="222" cy="322" r="17" fill={surf2} stroke={borderBr} strokeWidth="1.5" />
-            <circle cx="222" cy="322" r="12" fill="#8a6818" stroke="#c09030" strokeWidth="1.5" />
-            <circle cx="222" cy="322" r="5.5" fill="#5a4010" />
-            <text x="222" y="308" textAnchor="middle" fill={textMut} fontSize="8" fontFamily={mono} fontWeight="700">+</text>
-            <text x="222" y="347" textAnchor="middle" fill={textDim} fontSize="6" fontFamily={mono}>POS</text>
+            {/* Positive Socket (+) — symmetric to GAS, 40px from right inner edge */}
+            <circle cx="208" cy="322" r="17" fill={surf2} stroke={borderBr} strokeWidth="1.5" />
+            <circle cx="208" cy="322" r="12" fill="#8a6818" stroke="#c09030" strokeWidth="1.5" />
+            <circle cx="208" cy="322" r="5.5" fill="#5a4010" />
+            <text x="208" y="308" textAnchor="middle" fill={textMut} fontSize="8" fontFamily={mono} fontWeight="700">+</text>
+            <text x="208" y="347" textAnchor="middle" fill={textDim} fontSize="6" fontFamily={mono}>POS</text>
         </svg>
     )
 }
