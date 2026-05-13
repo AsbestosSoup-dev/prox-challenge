@@ -2,6 +2,7 @@ import { useEffect, useRef } from "react"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import MessageBubble from "./MessageBubble"
 import type { Message } from "../types"
+import { useIsDark } from "../lib/ThemeContext"
 
 const PROCESSES = [
     { id: "MIG",       label: "MIG",        query: "I want to set up for MIG welding. What do I need to know?" },
@@ -147,6 +148,7 @@ function EmptyState({ onSuggestion: _, onProcessSelect, activeProcess }: {
 //   5. Bottom connector base: Gas Outlet (far-left small), torch icon,
 //      Negative Socket, Wire Feed Power Cable, Positive Socket
 function MachineSVG({ lcdProcess }: { lcdProcess?: string | null }) {
+    const isDark = useIsDark()
     const W = 260
     const H = 370
     const cx = W / 2
@@ -164,6 +166,18 @@ function MachineSVG({ lcdProcess }: { lcdProcess?: string | null }) {
     const accentBr = "var(--accent-bright)"
     const green    = "var(--green)"
     const mono     = "'JetBrains Mono', monospace"
+
+    // Theme-dependent hardcoded colors
+    const lcdBg      = isDark ? "#dde8e2" : "#c8ddd6"
+    const lcdStroke  = isDark ? "#9ab0a8" : "#7a9890"
+    const lcdText    = isDark ? "#1a2820" : "#0d1f18"
+    const lcdBar     = isDark ? "#b0c4bc" : "#8aada4"
+    const lcdBarTick = isDark ? "#c8d8d0" : "#a0b8b0"
+    const lcdBarSel  = isDark ? "#6a8878" : "#4a6858"
+    const torchBody  = isDark ? "#3a5040" : "#2a4030"
+    const torchNeck  = isDark ? "#2a3830" : "#1a2820"
+    const switchOn   = isDark ? "#182018" : "#0e160e"
+    const connBase   = isDark ? "#141820" : "#1a1e2a"
 
     // knob helper — outer ring → body → inner cap → downward orange triangle indicator
     const Knob = ({ cx: kx, cy: ky, r = 20, label }: { cx: number; cy: number; r?: number; label: string }) => (
@@ -214,26 +228,26 @@ function MachineSVG({ lcdProcess }: { lcdProcess?: string | null }) {
 
             {/* LCD — inset, center of panel */}
             <rect x="48" y="66" width={W - 96} height="70" rx="4"
-                fill="#dde8e2" stroke="#9ab0a8" strokeWidth="1" />
+                fill={lcdBg} stroke={lcdStroke} strokeWidth="1" />
             {/* Process name */}
             <text x={cx} y="96" textAnchor="middle"
-                fill="#1a2820" fontSize="11" fontFamily={mono} fontWeight="600">
+                fill={lcdText} fontSize="11" fontFamily={mono} fontWeight="600">
                 {lcdProcess ? LCD_LABELS[lcdProcess] ?? lcdProcess : "OMNIPRO 220"}
             </text>
             {/* Torch icon */}
             <g transform={`translate(${cx - 18}, 98)`}>
-                <rect x="4" y="5" width="20" height="7" rx="3" fill="#3a5040" />
-                <rect x="21" y="6" width="7" height="5" rx="2" fill="#2a3830" />
+                <rect x="4" y="5" width="20" height="7" rx="3" fill={torchBody} />
+                <rect x="21" y="6" width="7" height="5" rx="2" fill={torchNeck} />
                 <line x1="28" y1="8.5" x2="33" y2="5" stroke="#c8922a" strokeWidth="1.5" strokeLinecap="round" />
                 <line x1="28" y1="8.5" x2="34" y2="8.5" stroke="#c8922a" strokeWidth="1.5" strokeLinecap="round" />
                 <line x1="28" y1="8.5" x2="33" y2="12" stroke="#c8922a" strokeWidth="1.5" strokeLinecap="round" />
-                <rect x="0" y="3" width="7" height="11" rx="2" fill="#2a3830" />
+                <rect x="0" y="3" width="7" height="11" rx="2" fill={torchNeck} />
             </g>
-            {/* Settings bar at LCD bottom — rx="4" to follow LCD bottom corners */}
-            <rect x="48" y="128" width={W - 96} height="8" rx="4" fill="#b0c4bc" />
+            {/* Settings bar at LCD bottom */}
+            <rect x="48" y="128" width={W - 96} height="8" rx="4" fill={lcdBar} />
             {[0,1,2,3,4,5,6,7].map(i => (
                 <rect key={i} x={51 + i * 17} y="130" width="12" height="4"
-                    rx="1" fill={i === 3 ? "#6a8878" : "#c8d8d0"} />
+                    rx="1" fill={i === 3 ? lcdBarSel : lcdBarTick} />
             ))}
 
             {/* Three knobs — evenly spaced, same size, below LCD */}
@@ -267,7 +281,7 @@ function MachineSVG({ lcdProcess }: { lcdProcess?: string | null }) {
             {/* CENTER: Power switch */}
             <rect x="98" y="248" width="30" height="36" rx="3"
                 fill={surf3} stroke={borderBr} strokeWidth="1" />
-            <rect x="100" y="250" width="26" height="15" rx="2" fill="#182018" stroke={border} strokeWidth="0.5" />
+            <rect x="100" y="250" width="26" height="15" rx="2" fill={switchOn} stroke={border} strokeWidth="0.5" />
             <text x="113" y="261" textAnchor="middle" fill={green} fontSize="9" fontFamily={mono} fontWeight="700">I</text>
             <rect x="100" y="267" width="26" height="13" rx="2" fill={surf2} stroke={border} strokeWidth="0.5" />
             <text x="113" y="277" textAnchor="middle" fill={textDim} fontSize="9" fontFamily={mono}>O</text>
@@ -282,7 +296,7 @@ function MachineSVG({ lcdProcess }: { lcdProcess?: string | null }) {
 
             {/* ── 5. Bottom connector base ─────────────────────────────── */}
             <rect x="12" y="300" width={W - 24} height="48" rx="6"
-                fill="#141820" stroke={borderBr} strokeWidth="1.5" />
+                fill={connBase} stroke={borderBr} strokeWidth="1.5" />
 
             {/* Spool Gun Gas Outlet */}
             <circle cx="52" cy="324" r="17" fill={surf2} stroke={borderBr} strokeWidth="1.5" />
