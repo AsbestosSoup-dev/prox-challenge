@@ -132,7 +132,7 @@ export default function App() {
                             setMessages((prev) => {
                                 const last = prev[prev.length - 1]
                                 const placeholder: Message & { _raw: string } = last?.role === "assistant"
-                                    ? { ...last }
+                                    ? { ...last, _raw: last._raw ?? "" }
                                     : { role: "assistant", content: "", _raw: "" }
                                 const updated = last?.role === "assistant" ? [...prev] : [...prev, placeholder]
                                 updated[updated.length - 1] = {
