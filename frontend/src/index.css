@@ -228,7 +228,7 @@ body {
 .turn-query {
   display: flex;
   justify-content: flex-end;
-  padding-right: 4px;
+  padding-right: 16px;
 }
 
 .query-pill {
