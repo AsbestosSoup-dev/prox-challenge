@@ -328,25 +328,22 @@ function SourcePages({ pages }: { pages: SourcePage[] }) {
 
 // ─── Main component ───────────────────────────────────────────────────────────
 export default function MessageBubble({ message, isStreaming }: Props) {
-    const [showCompleting, setShowCompleting] = useState(false)
-    const [showArtifact, setShowArtifact] = useState(false)
+    // "idle" | "loading" | "completing" | "done"
+    const [artifactPhase, setArtifactPhase] = useState<"idle" | "loading" | "completing" | "done">("idle")
     const [lightbox, setLightbox] = useState<{ src: string; alt: string } | null>(null)
-    const wasLoadingRef = useRef(false)
+    const phaseRef = useRef(artifactPhase)
+    phaseRef.current = artifactPhase
 
     const raw = message._raw ?? message.content
     const hadArtifact = isArtifactInProgress(raw) || raw.includes("</antartifact>")
 
     useEffect(() => {
-        if (isStreaming && hadArtifact) {
-            wasLoadingRef.current = true
+        if (isStreaming && hadArtifact && phaseRef.current === "idle") {
+            setArtifactPhase("loading")
         }
-        if (!isStreaming && wasLoadingRef.current) {
-            wasLoadingRef.current = false
-            setShowCompleting(true)
-            setTimeout(() => {
-                setShowCompleting(false)
-                setShowArtifact(true)
-            }, COMPLETE_MS + 100)
+        if (!isStreaming && phaseRef.current === "loading") {
+            setArtifactPhase("completing")
+            setTimeout(() => setArtifactPhase("done"), COMPLETE_MS + 100)
         }
     }, [isStreaming, hadArtifact])
 
@@ -379,22 +376,20 @@ export default function MessageBubble({ message, isStreaming }: Props) {
         )
     }
 
-    // ── Assistant — artifact loading ──────────────────────────────────────────
-    const artifactInProgress = isStreaming && isArtifactInProgress(raw)
-
-    if (artifactInProgress || showCompleting) {
+    // ── Assistant — artifact loading / completing ─────────────────────────────
+    if (artifactPhase === "loading" || artifactPhase === "completing") {
         const textBefore = getTextBeforeArtifact(raw)
         return (
             <div className="turn-answer">
                 {textBefore && <AssistantText text={textBefore} />}
-                <ArtifactLoadingWidget raw={raw} completing={showCompleting} />
+                <ArtifactLoadingWidget raw={raw} completing={artifactPhase === "completing"} />
             </div>
         )
     }
 
     // ── Assistant — full render ───────────────────────────────────────────────
     const { before, artifacts, after } = parseArtifactsSplit(raw)
-    const canShowArtifacts = showArtifact || !isStreaming
+    const canShowArtifacts = artifactPhase === "done" || !isStreaming
     const hasCitations = /\[\d+\]/.test(raw)
 
     return (

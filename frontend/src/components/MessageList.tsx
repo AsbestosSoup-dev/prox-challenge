@@ -18,16 +18,6 @@ const LCD_LABELS: Record<string, string> = {
     "Flux-Core": "FLUX-CORE",
 }
 
-function detectProcess(messages: (Message & { _raw?: string })[]): string | null {
-    for (let i = messages.length - 1; i >= 0; i--) {
-        const text = (messages[i]._raw ?? messages[i].content).toUpperCase()
-        if (text.includes("FLUX") || text.includes("FCAW")) return "Flux-Core"
-        if (text.includes("TIG") || text.includes("GTAW")) return "TIG"
-        if (text.includes("STICK") || text.includes("SMAW")) return "Stick"
-        if (text.includes("MIG") || text.includes("GMAW")) return "MIG"
-    }
-    return null
-}
 
 interface Props {
     messages: (Message & { _raw?: string })[]
@@ -69,7 +59,6 @@ export default function MessageList({ messages, isStreaming, isPending, onSugges
     }, [messages])
 
     const isEmpty = messages.length === 0
-    const lcdProcess = activeProcess ?? detectProcess(messages)
 
     return (
         <ScrollArea className="messages-scroll">
@@ -163,7 +152,7 @@ function MachineSVG({ lcdProcess }: { lcdProcess?: string | null }) {
     const textDim  = "var(--text-dim)"
     const textMut  = "var(--text-muted)"
     const accent   = "var(--accent)"
-    const accentBr = "var(--accent-bright)"
+
     const green    = "var(--green)"
     const mono     = "'JetBrains Mono', monospace"
 
@@ -181,7 +170,7 @@ function MachineSVG({ lcdProcess }: { lcdProcess?: string | null }) {
     const panel      = isDark ? "#1a1e24" : surf2
 
     // knob helper — outer ring → body → inner cap → downward orange triangle indicator
-    const Knob = ({ cx: kx, cy: ky, r = 20, label }: { cx: number; cy: number; r?: number; label: string }) => (
+    const Knob = ({ cx: kx, cy: ky, r = 20 }: { cx: number; cy: number; r?: number }) => (
         <g>
             <circle cx={kx} cy={ky} r={r + 4} fill={surf2} stroke={border} strokeWidth="1" />
             <circle cx={kx} cy={ky} r={r} fill={surf3} stroke={borderBr} strokeWidth="1.5" />
@@ -207,7 +196,7 @@ function MachineSVG({ lcdProcess }: { lcdProcess?: string | null }) {
                 fill={surf} stroke={border} strokeWidth="1.5" />
 
             {/* ── 2. Top control panel ─────────────────────────────────── */}
-            <rect x="16" y="34" width={W - 32} height="170" rx="6"
+            <rect x="12" y="34" width="236" height="182" rx="6"
                 fill={panel} stroke={border} strokeWidth="1" />
 
             {/* VULCAN logo top-left of panel */}
@@ -219,24 +208,24 @@ function MachineSVG({ lcdProcess }: { lcdProcess?: string | null }) {
             <text x={W - 22} y="50" textAnchor="end" fill={textMut} fontSize="7" fontFamily={mono} letterSpacing="0.5">OMNIPRO®</text>
             <text x={W - 22} y="62" textAnchor="end" fill={accent} fontSize="12" fontFamily={mono} fontWeight="700">220</text>
 
-            {/* HOME button — vertically centered on LCD */}
-            <rect x="20" y="91" width="22" height="20" rx="3"
+            {/* HOME button — horizontally centered between left edge and LCD, vertically centered on LCD */}
+            <rect x="30" y="91" width="22" height="20" rx="3"
                 fill={surf3} stroke={borderBr} strokeWidth="1" />
 
-            {/* BACK button — vertically centered on LCD */}
-            <rect x={W - 42} y="91" width="22" height="20" rx="3"
+            {/* BACK button — horizontally centered between LCD right edge and right edge, vertically centered on LCD */}
+            <rect x="208" y="91" width="22" height="20" rx="3"
                 fill={surf3} stroke={borderBr} strokeWidth="1" />
 
-            {/* LCD — inset, center of panel */}
-            <rect x="48" y="66" width={W - 96} height="70" rx="4"
+            {/* LCD — narrow, centered */}
+            <rect x="70" y="66" width="120" height="70" rx="4"
                 fill={lcdBg} stroke={lcdStroke} strokeWidth="1" />
             {/* Process name */}
-            <text x={cx} y="96" textAnchor="middle"
+            <text x={cx} y="100" textAnchor="middle"
                 fill={lcdText} fontSize="11" fontFamily={mono} fontWeight="600">
                 {lcdProcess ? LCD_LABELS[lcdProcess] ?? lcdProcess : "OMNIPRO 220"}
             </text>
             {/* Torch icon */}
-            <g transform={`translate(${cx - 18}, 98)`}>
+            <g transform={`translate(${cx - 18}, 102)`}>
                 <rect x="4" y="5" width="20" height="7" rx="3" fill={torchBody} />
                 <rect x="21" y="6" width="7" height="5" rx="2" fill={torchNeck} />
                 <line x1="28" y1="8.5" x2="33" y2="5" stroke="#c8922a" strokeWidth="1.5" strokeLinecap="round" />
@@ -245,79 +234,78 @@ function MachineSVG({ lcdProcess }: { lcdProcess?: string | null }) {
                 <rect x="0" y="3" width="7" height="11" rx="2" fill={torchNeck} />
             </g>
             {/* Settings bar at LCD bottom */}
-            <rect x="48" y="128" width={W - 96} height="8" rx="4" fill={lcdBar} />
+            <rect x="70" y="128" width="120" height="8" rx="4" fill={lcdBar} />
             {[0,1,2,3,4,5,6,7].map(i => (
-                <rect key={i} x={51 + i * 17} y="130" width="12" height="4"
+                <rect key={i} x={73 + i * 13} y="130" width="10" height="4"
                     rx="1" fill={i === 3 ? lcdBarSel : lcdBarTick} />
             ))}
 
-            {/* Three knobs — evenly spaced, same size, below LCD */}
-            <Knob cx={58}  cy={168} r={18} label="A" />
-            <Knob cx={cx}  cy={168} r={18} label="CTRL" />
-            <Knob cx={W - 58} cy={168} r={18} label="V" />
+            {/* Three knobs — A and V smaller (r=15), CTRL larger (r=20) */}
+            <Knob cx={58}  cy={180} r={15} />
+            <Knob cx={cx}  cy={180} r={20} />
+            <Knob cx={W - 58} cy={180} r={15} />
 
             {/* ── 3. VULCAN fascia band ────────────────────────────────── */}
-            <rect x="12" y="206" width={W - 24} height="28" rx="4"
+            <rect x="12" y="218" width={W - 24} height="28" rx="4"
                 fill={surf2} stroke={border} strokeWidth="1" />
-            <text x={cx} y="225" textAnchor="middle"
+            <text x={cx} y="237" textAnchor="middle"
                 fill={borderBr} fontSize="14" fontFamily={mono} fontWeight="900" letterSpacing="4">VULCAN</text>
 
             {/* ── 4. Middle section ────────────────────────────────────── */}
-            <rect x="12" y="236" width={W - 24} height="62" rx="4"
+            <rect x="12" y="248" width={W - 24} height="62" rx="4"
                 fill={surf2} stroke={border} strokeWidth="1" />
 
             {/* LEFT: MIG/Spool Gun Cable Socket — rectangular hole with rounded corners */}
-            {/* The "hole" is a recessed rectangle; socket circle sits near the right inner edge */}
-            <rect x="18" y="242" width="68" height="50" rx="5"
+            <rect x="18" y="254" width="68" height="50" rx="5"
                 fill={bg} stroke={borderBr} strokeWidth="1" />
             {/* socket circle — centered vertically, near right side of hole */}
-            <circle cx="64" cy="267" r="13" fill={surf3} stroke={borderBr} strokeWidth="1.5" />
-            <circle cx="64" cy="267" r="9" fill={bg} stroke={border} strokeWidth="0.75" />
+            <circle cx="64" cy="279" r="13" fill={surf3} stroke={borderBr} strokeWidth="1.5" />
+            <circle cx="64" cy="279" r="9" fill={bg} stroke={border} strokeWidth="0.75" />
             {[0,1,2,3,4].map(i => {
                 const a = (i / 5) * Math.PI * 2 - Math.PI / 2
-                return <circle key={i} cx={64 + 5 * Math.cos(a)} cy={267 + 5 * Math.sin(a)} r="1.5" fill={borderBr} />
+                return <circle key={i} cx={64 + 5 * Math.cos(a)} cy={279 + 5 * Math.sin(a)} r="1.5" fill={borderBr} />
             })}
-            <circle cx="64" cy="267" r="1.5" fill={borderBr} />
+            <circle cx="64" cy="279" r="1.5" fill={borderBr} />
 
             {/* CENTER: Power switch */}
-            <rect x="98" y="248" width="30" height="36" rx="3"
+            <rect x="98" y="260" width="30" height="36" rx="3"
                 fill={surf3} stroke={borderBr} strokeWidth="1" />
-            <rect x="100" y="250" width="26" height="15" rx="2" fill={switchOn} stroke={border} strokeWidth="0.5" />
-            <text x="113" y="261" textAnchor="middle" fill={green} fontSize="9" fontFamily={mono} fontWeight="700">I</text>
-            <rect x="100" y="267" width="26" height="13" rx="2" fill={surf2} stroke={border} strokeWidth="0.5" />
-            <text x="113" y="277" textAnchor="middle" fill={textDim} fontSize="9" fontFamily={mono}>O</text>
+            <rect x="100" y="262" width="26" height="15" rx="2" fill={switchOn} stroke={border} strokeWidth="0.5" />
+            <text x="113" y="273" textAnchor="middle" fill={green} fontSize="9" fontFamily={mono} fontWeight="700">I</text>
+            <rect x="100" y="279" width="26" height="13" rx="2" fill={surf2} stroke={border} strokeWidth="0.5" />
+            <text x="113" y="289" textAnchor="middle" fill={textDim} fontSize="9" fontFamily={mono}>O</text>
 
             {/* RIGHT: Horizontal cooling fins */}
-            <rect x="136" y="240" width={W - 150} height="54" rx="4"
+            <rect x="136" y="252" width={W - 150} height="54" rx="4"
                 fill={surf3} stroke={border} strokeWidth="0.75" />
             {Array.from({ length: 8 }, (_, k) => (
-                <rect key={k} x="139" y={243 + k * 6} width={W - 157} height="4"
+                <rect key={k} x="139" y={255 + k * 6} width={W - 157} height="4"
                     rx="1" fill={surf} stroke={border} strokeWidth="0.5" />
             ))}
 
             {/* ── 5. Bottom connector base ─────────────────────────────── */}
-            <rect x="12" y="300" width={W - 24} height="48" rx="6"
+            <rect x="12" y="312" width={W - 24} height="48" rx="6"
                 fill={connBase} stroke={borderBr} strokeWidth="1.5" />
 
             {/* Spool Gun Gas Outlet */}
-            <circle cx="52" cy="324" r="17" fill={surf2} stroke={borderBr} strokeWidth="1.5" />
-            <circle cx="52" cy="324" r="12" fill="#8a6818" stroke="#c09030" strokeWidth="1.5" />
-            <circle cx="52" cy="324" r="5.5" fill="#5a4010" />
+            <circle cx="52" cy="336" r="17" fill={surf2} stroke={borderBr} strokeWidth="1.5" />
+            <circle cx="52" cy="336" r="12" fill="#8a6818" stroke="#c09030" strokeWidth="1.5" />
+            <circle cx="52" cy="336" r="5.5" fill="#5a4010" />
 
-            {/* Negative Socket (−) — center */}
-            <circle cx="130" cy="324" r="17" fill={surf2} stroke={borderBr} strokeWidth="1.5" />
-            <circle cx="130" cy="324" r="12" fill="#8a6818" stroke="#c09030" strokeWidth="1.5" />
-            <circle cx="130" cy="324" r="5.5" fill="#5a4010" />
+            {/* Negative Socket (−) */}
+            <circle cx="130" cy="336" r="17" fill={surf2} stroke={borderBr} strokeWidth="1.5" />
+            <circle cx="130" cy="336" r="12" fill="#8a6818" stroke="#c09030" strokeWidth="1.5" />
+            <circle cx="130" cy="336" r="5.5" fill="#5a4010" />
 
-            {/* Wire Feed Power Cable — smaller, midpoint between NEG(130) and POS(208) = 169, slightly lower */}
-            <circle cx="169" cy="332" r="10" fill={surf2} stroke={borderBr} strokeWidth="1.25" />
-            <circle cx="169" cy="332" r="6.5" fill="#8a6818" stroke="#c09030" strokeWidth="1" />
-            <circle cx="169" cy="332" r="3" fill="#5a4010" />
+            {/* Wire Feed Power Cable — smaller, midpoint between NEG and POS */}
+            <circle cx="169" cy="344" r="10" fill={surf2} stroke={borderBr} strokeWidth="1.25" />
+            <circle cx="169" cy="344" r="6.5" fill="#8a6818" stroke="#c09030" strokeWidth="1" />
+            <circle cx="169" cy="344" r="3" fill="#5a4010" />
 
             {/* Positive Socket (+) */}
-            <circle cx="208" cy="324" r="17" fill={surf2} stroke={borderBr} strokeWidth="1.5" />
-            <circle cx="208" cy="324" r="12" fill="#8a6818" stroke="#c09030" strokeWidth="1.5" />
-            <circle cx="208" cy="324" r="5.5" fill="#5a4010" />
+            <circle cx="208" cy="336" r="17" fill={surf2} stroke={borderBr} strokeWidth="1.5" />
+            <circle cx="208" cy="336" r="12" fill="#8a6818" stroke="#c09030" strokeWidth="1.5" />
+            <circle cx="208" cy="336" r="5.5" fill="#5a4010" />
         </svg>
     )
 }
