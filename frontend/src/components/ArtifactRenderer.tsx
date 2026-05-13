@@ -46,6 +46,8 @@ function buildSrcDoc(artifact: Artifact, isDark: boolean): string {
             .replace(/import\s+.*?from\s+['"]react['"]\s*;?\n?/g, '')
             // Remove other imports (lucide, etc.) that won't resolve in sandbox
             .replace(/import\s+.*?from\s+['"][^'"]+['"]\s*;?\n?/g, '')
+            // Remove React hook destructuring lines Claude sometimes adds (already injected by iframe)
+            .replace(/const\s*\{[^}]*\}\s*=\s*React\s*;?\n?/g, '')
             // export default function Foo → function Foo
             .replace(/export\s+default\s+function\s+(\w+)/, (_, name) => `function ${name}`)
             // export default Foo (bare identifier at end)
