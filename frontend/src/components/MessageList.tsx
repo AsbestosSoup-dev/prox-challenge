@@ -113,7 +113,7 @@ function EmptyState({ onSuggestion }: { onSuggestion: (s: string) => void }) {
 function MachineSVG() {
     // viewBox: 260 wide × 380 tall — portrait, fits the actual panel proportions
     const W = 260
-    const H = 380
+    const H = 390
     const cx = W / 2
 
     // Colors via CSS vars — SVG uses currentColor fallback
@@ -135,7 +135,7 @@ function MachineSVG() {
             viewBox={`0 0 ${W} ${H}`}
             fill="none"
             xmlns="http://www.w3.org/2000/svg"
-            style={{ width: "100%", maxWidth: 240, height: "auto", display: "block", margin: "0 auto" }}
+            style={{ width: "100%", maxWidth: 200, height: "auto", display: "block", margin: "0 auto" }}
             aria-hidden="true"
         >
             {/* ── Outer body ─────────────────────────────────────────── */}
@@ -239,70 +239,81 @@ function MachineSVG() {
             <polygon points={`${W-62},208 ${W-58},200 ${W-54},208`} fill={accent} />
             <text x={W - 58} y="258" textAnchor="middle" fill={textDim} fontSize="8" fontFamily={mono}>V</text>
 
-            {/* ── Power switch ────────────────────────────────────────── */}
-            <rect x={cx - 14} y="270" width="28" height="16" rx="4"
+            {/* ── Middle section: Storage | Power Switch | Cooling fins ── */}
+            {/* Background band */}
+            <rect x="14" y="268" width={W - 28} height="46" rx="4"
+                fill={surf2} stroke={border} strokeWidth="0.75" />
+
+            {/* Storage compartment door — left third */}
+            <rect x="18" y="272" width="62" height="38" rx="4"
                 fill={surf3} stroke={borderBr} strokeWidth="1" />
-            {/* rocker: I side lit, O side dark */}
-            <rect x={cx - 13} y="271" width="12" height="14" rx="3" fill="#2a3a2a" />
-            <text x={cx - 7} y="282" textAnchor="middle" fill={green} fontSize="8" fontFamily={mono} fontWeight="700">I</text>
-            <rect x={cx + 1} y="271" width="12" height="14" rx="3" fill={surf2} />
-            <text x={cx + 7} y="282" textAnchor="middle" fill={textDim} fontSize="8" fontFamily={mono}>O</text>
-            <text x={cx} y="296" textAnchor="middle" fill={textDim} fontSize="7" fontFamily={mono}>POWER</text>
+            {/* Finger-pull hole */}
+            <circle cx="49" cy="295" r="8" fill={bg} stroke={border} strokeWidth="1" />
+            <circle cx="49" cy="295" r="4" fill={surf} stroke={borderBr} strokeWidth="0.75" />
 
-            {/* Spool Gun Gas Outlet — small barbed nipple, right side mid-panel */}
-            <circle cx={W - 20} cy="178" r="6" fill={surf3} stroke={borderBr} strokeWidth="1" />
-            <circle cx={W - 20} cy="178" r="3" fill={bg} />
-            <text x={W - 20} y="192" textAnchor="middle" fill={textDim} fontSize="6" fontFamily={mono}>GAS</text>
+            {/* Power switch — center */}
+            {/* Switch housing */}
+            <rect x="94" y="276" width="30" height="34" rx="3"
+                fill={surf3} stroke={borderBr} strokeWidth="1" />
+            {/* I (on) rocker — top half, green tint */}
+            <rect x="96" y="278" width="26" height="13" rx="2" fill="#1a2a1a" stroke={border} strokeWidth="0.5" />
+            <text x="109" y="288" textAnchor="middle" fill={green} fontSize="9" fontFamily={mono} fontWeight="700">I</text>
+            {/* O (off) rocker — bottom half */}
+            <rect x="96" y="293" width="26" height="13" rx="2" fill={surf2} stroke={border} strokeWidth="0.5" />
+            <text x="109" y="303" textAnchor="middle" fill={textDim} fontSize="9" fontFamily={mono}>O</text>
 
-            {/* ── Bottom connector row ────────────────────────────────── */}
-            {/* Divider above connectors */}
-            <line x1="14" y1="306" x2={W - 14} y2="306" stroke={border} strokeWidth="0.75" />
+            {/* Cooling fins — right third, horizontal slats */}
+            {Array.from({ length: 6 }, (_, k) => (
+                <rect key={k}
+                    x="132" y={274 + k * 6}
+                    width={W - 148} height="4"
+                    rx="1"
+                    fill={surf} stroke={border} strokeWidth="0.5" />
+            ))}
 
-            {/* MIG Gun / Spool Gun Cable Socket — left, multi-pin round */}
-            <circle cx="58" cy="330" r="18" fill={surf2} stroke={borderBr} strokeWidth="1.5" />
-            <circle cx="58" cy="330" r="12" fill={bg} stroke={border} strokeWidth="0.75" />
-            {/* pin holes */}
-            {[0,1,2,3,4,5,6].map(i => {
-                const angle = (i / 7) * Math.PI * 2
-                const px = 58 + 7 * Math.cos(angle)
-                const py = 330 + 7 * Math.sin(angle)
-                return <circle key={i} cx={px} cy={py} r="1.5" fill={borderBr} />
+            {/* Spool Gun Gas Outlet — small barbed nipple above fins */}
+            <circle cx={W - 22} cy="264" r="5" fill={surf3} stroke={borderBr} strokeWidth="1" />
+            <circle cx={W - 22} cy="264" r="2.5" fill={bg} />
+            <text x={W - 22} y="258" textAnchor="middle" fill={textDim} fontSize="6" fontFamily={mono}>GAS</text>
+
+            {/* ── Connector strip ──────────────────────────────────────── */}
+            {/* Lower sub-panel */}
+            <rect x="10" y="318" width={W - 20} height="50" rx="4"
+                fill={surf3} stroke={borderBr} strokeWidth="1" />
+
+            {/* 1. Multi-pin control socket (torch/trigger) — far left */}
+            <circle cx="35" cy="343" r="14" fill={surf2} stroke={borderBr} strokeWidth="1.5" />
+            <circle cx="35" cy="343" r="9" fill={bg} stroke={border} strokeWidth="0.75" />
+            {[0,1,2,3,4].map(i => {
+                const angle = (i / 5) * Math.PI * 2 - Math.PI / 2
+                return <circle key={i} cx={35 + 5 * Math.cos(angle)} cy={343 + 5 * Math.sin(angle)} r="1.5" fill={borderBr} />
             })}
-            <circle cx="58" cy="330" r="2" fill={borderBr} />
-            <text x="58" y="355" textAnchor="middle" fill={textDim} fontSize="7" fontFamily={mono}>MIG GUN</text>
-            <text x="58" y="363" textAnchor="middle" fill={textDim} fontSize="7" fontFamily={mono}>SOCKET</text>
+            <circle cx="35" cy="343" r="1.5" fill={borderBr} />
+            <text x="35" y="362" textAnchor="middle" fill={textDim} fontSize="6" fontFamily={mono}>CTRL</text>
 
-            {/* Negative socket — center-left, twist-lock gold */}
-            <circle cx={cx - 18} cy="330" r="16" fill={surf2} stroke={borderBr} strokeWidth="1.5" />
-            <circle cx={cx - 18} cy="330" r="10" fill="#8a7030" stroke="#b09040" strokeWidth="1" />
-            <text x={cx - 18} y="334" textAnchor="middle" fill="#e0c060" fontSize="11" fontFamily={mono} fontWeight="700">−</text>
-            <text x={cx - 18} y="353" textAnchor="middle" fill={textDim} fontSize="7" fontFamily={mono}>NEG</text>
+            {/* 2. Wire Feed Power Cable stud — gold */}
+            <circle cx="72" cy="343" r="12" fill={surf2} stroke={borderBr} strokeWidth="1.5" />
+            <circle cx="72" cy="343" r="7" fill="#7a6020" stroke="#a08030" strokeWidth="1" />
+            <text x="72" y="362" textAnchor="middle" fill={textDim} fontSize="6" fontFamily={mono}>WIRE</text>
 
-            {/* Positive socket — center-right, twist-lock gold */}
-            <circle cx={cx + 18} cy="330" r="16" fill={surf2} stroke={borderBr} strokeWidth="1.5" />
-            <circle cx={cx + 18} cy="330" r="10" fill="#8a7030" stroke="#b09040" strokeWidth="1" />
-            <text x={cx + 18} y="334" textAnchor="middle" fill="#e0c060" fontSize="11" fontFamily={mono} fontWeight="700">+</text>
-            <text x={cx + 18} y="353" textAnchor="middle" fill={textDim} fontSize="7" fontFamily={mono}>POS</text>
+            {/* Torch icon label between wire and neg */}
+            <text x="103" y="340" textAnchor="middle" fill={textDim} fontSize="9" fontFamily={mono}>⊙</text>
 
-            {/* Storage compartment door — right side */}
-            <rect x={W - 38} y="310" width="24" height="40" rx="4"
-                fill={surf3} stroke={border} strokeWidth="1" />
-            <line x1={W - 32} y1="326" x2={W - 20} y2="326" stroke={border} strokeWidth="0.75" />
-            <text x={W - 26} y="338" textAnchor="middle" fill={textDim} fontSize="6" fontFamily={mono}>STOR</text>
+            {/* 3. Negative socket — gold */}
+            <circle cx="130" cy="343" r="12" fill={surf2} stroke={borderBr} strokeWidth="1.5" />
+            <circle cx="130" cy="343" r="7" fill="#7a6020" stroke="#a08030" strokeWidth="1" />
+            <text x="130" y="347" textAnchor="middle" fill="#d4a830" fontSize="10" fontFamily={mono} fontWeight="700">−</text>
+            <text x="130" y="362" textAnchor="middle" fill={textDim} fontSize="6" fontFamily={mono}>NEG</text>
 
-            {/* ── Bottom vent grille ───────────────────────────────────── */}
-            {Array.from({ length: 7 }, (_, k) => (
-                <line key={k}
-                    x1={16 + k * 8} y1={H - 10}
-                    x2={16 + k * 8} y2={H - 4}
-                    stroke={border} strokeWidth="1" strokeLinecap="round" />
-            ))}
-            {Array.from({ length: 7 }, (_, k) => (
-                <line key={k + 20}
-                    x1={W - 16 - k * 8} y1={H - 10}
-                    x2={W - 16 - k * 8} y2={H - 4}
-                    stroke={border} strokeWidth="1" strokeLinecap="round" />
-            ))}
+            {/* 4. Positive socket — gold */}
+            <circle cx="175" cy="343" r="12" fill={surf2} stroke={borderBr} strokeWidth="1.5" />
+            <circle cx="175" cy="343" r="7" fill="#7a6020" stroke="#a08030" strokeWidth="1" />
+            <text x="175" y="347" textAnchor="middle" fill="#d4a830" fontSize="10" fontFamily={mono} fontWeight="700">+</text>
+            <text x="175" y="362" textAnchor="middle" fill={textDim} fontSize="6" fontFamily={mono}>POS</text>
+
+            {/* 5. Far-right stud */}
+            <circle cx="218" cy="343" r="12" fill={surf2} stroke={borderBr} strokeWidth="1.5" />
+            <circle cx="218" cy="343" r="7" fill="#7a6020" stroke="#a08030" strokeWidth="1" />
         </svg>
     )
 }

@@ -614,17 +614,17 @@ ol.assistant-list {
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
-  padding: 24px 20px 40px;
+  justify-content: flex-start;
+  padding: 16px 20px 40px;
   gap: 0;
-  flex: 1;
-  min-height: 60vh;
+  width: 100%;
 }
 
 .welcome-machine {
   width: 100%;
   max-width: 460px;
-  margin-bottom: 28px;
+  margin-top: 12px;
+  margin-bottom: 24px;
   position: relative;
 }
 
