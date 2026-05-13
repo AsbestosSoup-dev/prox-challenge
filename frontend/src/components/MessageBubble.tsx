@@ -395,6 +395,7 @@ export default function MessageBubble({ message, isStreaming }: Props) {
     // ── Assistant — full render ───────────────────────────────────────────────
     const { before, artifacts, after } = parseArtifactsSplit(raw)
     const canShowArtifacts = showArtifact || !isStreaming
+    const hasCitations = /\[\d+\]/.test(raw)
 
     return (
         <div className="turn-answer">
@@ -403,7 +404,7 @@ export default function MessageBubble({ message, isStreaming }: Props) {
                 <ArtifactRenderer key={artifact.identifier} artifact={artifact} />
             ))}
             {canShowArtifacts && after && <AssistantText text={after} />}
-            {canShowArtifacts && message.source_pages && message.source_pages.length > 0 && (
+            {canShowArtifacts && hasCitations && message.source_pages && message.source_pages.length > 0 && (
                 <SourcePages pages={message.source_pages} />
             )}
         </div>
