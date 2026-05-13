@@ -85,6 +85,7 @@ async def transcribe(audio: UploadFile = File(...)):
             data={"model_id": "scribe_v1"},
         )
     if response.status_code != 200:
+        print(f"ElevenLabs error {response.status_code}: {response.text}", flush=True)
         return JSONResponse({"error": "Transcription failed", "detail": response.text}, status_code=502)
     return JSONResponse({"text": response.json().get("text", "")})
 
