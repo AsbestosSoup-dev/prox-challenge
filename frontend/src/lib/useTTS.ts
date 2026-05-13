@@ -2,19 +2,18 @@ import { useCallback, useRef } from "react"
 
 const BACKEND_URL = import.meta.env.VITE_BACKEND_URL ?? "http://127.0.0.1:8000"
 
-export function useTTS() {
+export function useTTS(onError?: () => void) {
     const audioRef = useRef<HTMLAudioElement | null>(null)
 
     const speak = useCallback(async (text: string) => {
-        // Stop any currently playing audio
         if (audioRef.current) {
             audioRef.current.pause()
             audioRef.current = null
         }
 
         const cleaned = text
-            .replace(/\[.*?\]/g, "")   // strip citations
-            .replace(/\*\*/g, "")       // strip bold markers
+            .replace(/\[.*?\]/g, "")
+            .replace(/\*\*/g, "")
             .trim()
 
         if (!cleaned) return
@@ -25,7 +24,7 @@ export function useTTS() {
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ text: cleaned }),
             })
-            if (!res.ok) return
+            if (!res.ok) { onError?.(); return }
 
             const blob = await res.blob()
             const url = URL.createObjectURL(blob)
@@ -34,9 +33,9 @@ export function useTTS() {
             audio.play()
             audio.onended = () => URL.revokeObjectURL(url)
         } catch {
-            // silently fail
+            onError?.()
         }
-    }, [])
+    }, [onError])
 
     const stop = useCallback(() => {
         if (audioRef.current) {

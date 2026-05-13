@@ -1,8 +1,33 @@
-import { useRef, useState } from "react"
+import { useRef, useState, useEffect } from "react"
 import { Textarea } from "@/components/ui/textarea"
 import { ImageIcon, Mic, Send } from "lucide-react"
 
 const BACKEND_URL = import.meta.env.VITE_BACKEND_URL ?? "http://127.0.0.1:8000"
+
+const HINTS = [
+    "What's the duty cycle at max amperage?",
+    "How do I set up for MIG welding?",
+    "Walk me through flux-cored polarity",
+    "My arc keeps sputtering — what's wrong?",
+]
+
+function useCyclingPlaceholder(items: string[], interval = 3000, fadeDuration = 400) {
+    const [index, setIndex] = useState(0)
+    const [visible, setVisible] = useState(true)
+
+    useEffect(() => {
+        const t = setInterval(() => {
+            setVisible(false)
+            setTimeout(() => {
+                setIndex(i => (i + 1) % items.length)
+                setVisible(true)
+            }, fadeDuration)
+        }, interval)
+        return () => clearInterval(t)
+    }, [items.length, interval, fadeDuration])
+
+    return { text: items[index], visible }
+}
 
 interface Props {
     value: string
@@ -12,6 +37,8 @@ interface Props {
     pendingImages: { data: string; type: string }[]
     onImagesAdd: (images: { data: string; type: string }[]) => void
     onImageRemove: (index: number) => void
+    hasMessages?: boolean
+    onAudioError?: () => void
 }
 
 function readFilesAsBase64(files: File[]): Promise<{ data: string; type: string }[]> {
@@ -37,7 +64,11 @@ export default function InputBar({
     pendingImages,
     onImagesAdd,
     onImageRemove,
+    hasMessages = false,
+    onAudioError,
 }: Props) {
+    const { text: hintText, visible: hintVisible } = useCyclingPlaceholder(HINTS)
+    const [isFocused, setIsFocused] = useState(false)
     const fileInputRef = useRef<HTMLInputElement>(null)
     const [isRecording, setIsRecording] = useState(false)
     const [isTranscribing, setIsTranscribing] = useState(false)
@@ -71,9 +102,11 @@ export default function InputBar({
                     const json = await res.json()
                     if (json.text) {
                         onChange((valueRef.current ? valueRef.current + " " : "") + json.text)
+                    } else {
+                        onAudioError?.()
                     }
                 } catch {
-                    // silently fail
+                    onAudioError?.()
                 } finally {
                     setIsTranscribing(false)
                 }
@@ -160,16 +193,38 @@ export default function InputBar({
                     style={{ display: "none" }}
                 />
 
-                <Textarea
-                    value={value}
-                    onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => onChange(e.target.value)}
-                    onKeyDown={handleKeyDown}
-                    onPaste={handlePaste}
-                    placeholder={isRecording ? "Recording…" : isTranscribing ? "Transcribing…" : "Ask about OmniPro 220…"}
-                    className="chat-textarea"
-                    rows={1}
-                    disabled={isStreaming}
-                />
+                <div className="chat-textarea-wrap">
+                    {!value && !isFocused && !isRecording && !isTranscribing && !hasMessages && (
+                        <span
+                            className={`chat-hint${hintVisible ? " chat-hint--visible" : ""}`}
+                            aria-hidden
+                        >
+                            {hintText}
+                        </span>
+                    )}
+                    {!value && !isFocused && !isRecording && !isTranscribing && hasMessages && (
+                        <span className="chat-hint chat-hint--visible" aria-hidden>
+                            Ask about OmniPro 220…
+                        </span>
+                    )}
+                    {(isRecording || isTranscribing) && (
+                        <span className="chat-hint chat-hint--visible" aria-hidden>
+                            {isRecording ? "Recording…" : "Transcribing…"}
+                        </span>
+                    )}
+                    <Textarea
+                        value={value}
+                        onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => onChange(e.target.value)}
+                        onKeyDown={handleKeyDown}
+                        onPaste={handlePaste}
+                        onFocus={() => setIsFocused(true)}
+                        onBlur={() => setIsFocused(false)}
+                        placeholder=""
+                        className="chat-textarea"
+                        rows={1}
+                        disabled={isStreaming}
+                    />
+                </div>
 
                 <div title={isRecording ? "Tap to stop" : "Tap to record"}>
                     <button

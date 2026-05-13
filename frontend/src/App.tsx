@@ -5,6 +5,7 @@ import InputBar from "./components/InputBar"
 import type {Message} from "./types"
 import proxLogo from "./assets/prox.svg?url"
 import {useTTS} from "./lib/useTTS"
+import { ThemeContext } from "./lib/ThemeContext"
 
 const BACKEND_URL = import.meta.env.VITE_BACKEND_URL ?? "http://127.0.0.1:8000"
 
@@ -17,9 +18,14 @@ export default function App() {
     const [isStreaming, setIsStreaming] = useState(false)
     const [isPending, setIsPending] = useState(false)
     const [pendingImages, setPendingImages] = useState<{ data: string; type: string }[]>([])
+    const [activeProcess, setActiveProcess] = useState<string | null>(null)
+    const [audioError, setAudioError] = useState(false)
     const rawBufferRef = useRef("")
     const pendingPagesRef = useRef<any[] | null>(null)
-    const { speak, stop } = useTTS()
+    const { speak, stop } = useTTS(() => {
+        setAudioError(true)
+        setTimeout(() => setAudioError(false), 5000)
+    })
 
     const sendMessage = useCallback(async () => {
         const text = input.trim()
@@ -37,6 +43,7 @@ export default function App() {
         const newMessages = [...messages, userMsg]
         setMessages(newMessages)
         setInput("")
+        setActiveProcess(null)
         setPendingImages([])
         stop()
         setIsStreaming(true)
@@ -123,7 +130,13 @@ export default function App() {
     }, [input, messages, isStreaming, pendingImages, audioEnabled, speak, stop])
 
     return (
+        <ThemeContext.Provider value={isDark}>
         <div className={`app ${isDark ? "dark" : "light"}`}>
+            {audioError && (
+                <div className="audio-error-toast">
+                    ElevenLabs not responding — TTS/STT temporarily unavailable
+                </div>
+            )}
             <div className="header-outer">
                 <header className="header">
                     <div className="header-left">
@@ -152,19 +165,27 @@ export default function App() {
                 isStreaming={isStreaming}
                 isPending={isPending}
                 onSuggestion={(s) => setInput(s)}
+                activeProcess={activeProcess}
+                onProcessSelect={(process, query) => {
+                    setActiveProcess(process)
+                    setInput(query)
+                }}
             />
 
             <div className="input-outer">
                 <InputBar
                     value={input}
-                    onChange={setInput}
+                    onChange={(v) => { setInput(v); if (!v) setActiveProcess(null) }}
                     onSend={sendMessage}
                     isStreaming={isStreaming}
                     pendingImages={pendingImages}
                     onImagesAdd={(imgs) => setPendingImages((prev) => [...prev, ...imgs])}
                     onImageRemove={(i) => setPendingImages((prev) => prev.filter((_, j) => j !== i))}
+                    hasMessages={messages.length > 0}
+                    onAudioError={() => { setAudioError(true); setTimeout(() => setAudioError(false), 5000) }}
                 />
             </div>
         </div>
+        </ThemeContext.Provider>
     )
 }
