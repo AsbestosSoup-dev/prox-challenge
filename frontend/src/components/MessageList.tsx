@@ -106,14 +106,20 @@ function EmptyState({ onSuggestion }: { onSuggestion: (s: string) => void }) {
 }
 
 // Accurate front panel schematic of the Vulcan OmniPro 220
-// Based on manual page 8 + product photos.
-// Layout (portrait): handle top, VULCAN/OMNIPRO header, LCD center with
-// HOME+BACK flanking, three knobs below (Left/Control/Right), power switch,
-// bottom connector row (torch socket, negative, positive).
+// Source: manual page 8 diagram (labeled front panel controls).
+// Sections top→bottom:
+//   1. Handle (tubular, center-top)
+//   2. Top control panel: VULCAN logo + ⚠ icons left, LCD center-right,
+//      OMNIPRO 220 right, HOME knob+button below-left, BACK button right,
+//      three downward-arrow knobs in a row below LCD (Left/Control/Right)
+//   3. VULCAN fascia band
+//   4. Middle section: MIG Gun socket area (left, with spool gun gas outlet),
+//      Power switch (center), Cooling fins / Storage (right)
+//   5. Bottom connector base: Gas Outlet (far-left small), torch icon,
+//      Negative Socket, Wire Feed Power Cable, Positive Socket
 function MachineSVG() {
-    // viewBox: 260 wide × 380 tall — portrait, fits the actual panel proportions
     const W = 260
-    const H = 390
+    const H = 420
     const cx = W / 2
 
     // Colors via CSS vars — SVG uses currentColor fallback
@@ -130,190 +136,168 @@ function MachineSVG() {
     const green    = "var(--green)"
     const mono     = "'JetBrains Mono', monospace"
 
+    // knob helper — outer ring → body → inner cap → downward orange triangle indicator
+    const Knob = ({ cx: kx, cy: ky, r = 20, label }: { cx: number; cy: number; r?: number; label: string }) => (
+        <g>
+            <circle cx={kx} cy={ky} r={r + 4} fill={surf2} stroke={border} strokeWidth="1" />
+            <circle cx={kx} cy={ky} r={r} fill={surf3} stroke={borderBr} strokeWidth="1.5" />
+            <circle cx={kx} cy={ky} r={r * 0.55} fill={surf2} stroke={border} strokeWidth="0.75" />
+            {/* Downward-pointing orange triangle (like in manual diagram) */}
+            <polygon
+                points={`${kx - 5},${ky + r - 8} ${kx + 5},${ky + r - 8} ${kx},${ky + r + 1}`}
+                fill={accent}
+            />
+            <text x={kx} y={ky + r + 16} textAnchor="middle" fill={textDim} fontSize="7" fontFamily={mono}>{label}</text>
+        </g>
+    )
+
     return (
         <svg
             viewBox={`0 0 ${W} ${H}`}
             fill="none"
             xmlns="http://www.w3.org/2000/svg"
-            style={{ width: "100%", maxWidth: 200, height: "auto", display: "block", margin: "0 auto" }}
+            style={{ width: "100%", maxWidth: 210, height: "auto", display: "block", margin: "0 auto" }}
             aria-hidden="true"
         >
-            {/* ── Outer body ─────────────────────────────────────────── */}
-            <rect x="10" y="28" width={W - 20} height={H - 36} rx="10"
+            {/* ── 1. Outer body ───────────────────────────────────────── */}
+            <rect x="12" y="30" width={W - 24} height={H - 44} rx="12"
                 fill={surf} stroke={border} strokeWidth="1.5" />
 
-            {/* ── Carry handle (tube, top center) ────────────────────── */}
-            {/* Left leg */}
-            <rect x="68" y="16" width="10" height="24" rx="5" fill={surf2} stroke={border} strokeWidth="1" />
-            {/* Right leg */}
-            <rect x={W - 78} y="16" width="10" height="24" rx="5" fill={surf2} stroke={border} strokeWidth="1" />
-            {/* Bar */}
-            <rect x="70" y="10" width={W - 140} height="14" rx="7" fill={surf3} stroke={borderBr} strokeWidth="1" />
+            {/* ── Carry handle ────────────────────────────────────────── */}
+            <rect x="74" y="18" width="8" height="20" rx="4" fill={surf2} stroke={border} strokeWidth="1" />
+            <rect x={W - 82} y="18" width="8" height="20" rx="4" fill={surf2} stroke={border} strokeWidth="1" />
+            <rect x="74" y="10" width={W - 148} height="13" rx="6" fill={surf3} stroke={borderBr} strokeWidth="1" />
 
-            {/* ── Header band ────────────────────────────────────────── */}
-            {/* Orange left accent strip (mimics orange side panel peeking in) */}
-            <rect x="10" y="28" width="18" height="44" rx="5"
-                fill="#c85a00" stroke="none" />
-            {/* "VULCAN" text */}
-            <text x="38" y="50" fill={textMut} fontSize="10" fontFamily={mono}
-                fontWeight="700" letterSpacing="1.5">VULCAN</text>
-            {/* "OMNIPRO" orange + "220" */}
-            <text x={W - 22} y="43" fill={accent} fontSize="8" fontFamily={mono}
-                fontWeight="600" letterSpacing="0.5" textAnchor="end">OMNIPRO</text>
-            <text x={W - 22} y="54" fill={accentBr} fontSize="11" fontFamily={mono}
-                fontWeight="700" letterSpacing="0.5" textAnchor="end">220</text>
+            {/* ── 2. Top control panel ─────────────────────────────────── */}
+            <rect x="16" y="34" width={W - 32} height="170" rx="6"
+                fill="#1a1e24" stroke={border} strokeWidth="1" />
 
-            {/* Thin divider */}
-            <line x1="14" y1="74" x2={W - 14} y2="74" stroke={border} strokeWidth="0.75" />
+            {/* VULCAN logo top-left of panel */}
+            <text x="26" y="52" fill="white" fontSize="9" fontFamily={mono} fontWeight="800" letterSpacing="1">VULCAN</text>
+            {/* Warning / indicator icons beside logo */}
+            <text x="26" y="63" fill={textDim} fontSize="7" fontFamily={mono}>⚠  ▮▮</text>
 
-            {/* ── LCD display ────────────────────────────────────────── */}
-            {/* LCD outer bezel */}
-            <rect x="44" y="82" width={W - 88} height="88" rx="5"
-                fill={surf2} stroke={borderBr} strokeWidth="1" />
-            {/* LCD screen (white-ish, like a real transflective LCD) */}
-            <rect x="50" y="88" width={W - 100} height="76" rx="3"
-                fill="#dde8e0" stroke="#aab8b0" strokeWidth="0.75" />
-            {/* Process name on LCD */}
-            <text x={cx} y="118" textAnchor="middle"
-                fill="#1a2820" fontSize="13" fontFamily={mono} fontWeight="600"
-                letterSpacing="0.5">MIG Steel C25</text>
-            {/* Weld icon — simplified torch silhouette */}
-            <g transform={`translate(${cx - 14}, 122)`}>
-                {/* torch body */}
-                <rect x="2" y="6" width="24" height="8" rx="3" fill="#3a5040" />
-                {/* nozzle */}
-                <rect x="22" y="8" width="8" height="4" rx="2" fill="#2a3830" />
-                {/* arc sparks */}
-                <line x1="30" y1="10" x2="36" y2="6" stroke="#c8922a" strokeWidth="1.5" strokeLinecap="round" />
-                <line x1="30" y1="10" x2="36" y2="10" stroke="#c8922a" strokeWidth="1.5" strokeLinecap="round" />
-                <line x1="30" y1="10" x2="36" y2="14" stroke="#c8922a" strokeWidth="1.5" strokeLinecap="round" />
-                {/* handle */}
-                <rect x="0" y="4" width="6" height="12" rx="2" fill="#2a3830" />
+            {/* OMNIPRO 220 top-right */}
+            <text x={W - 22} y="50" textAnchor="end" fill={textMut} fontSize="7" fontFamily={mono} letterSpacing="0.5">OMNIPRO®</text>
+            <text x={W - 22} y="62" textAnchor="end" fill={accent} fontSize="12" fontFamily={mono} fontWeight="700">220</text>
+
+            {/* HOME button — square, left side below logo */}
+            <rect x="20" y="70" width="22" height="20" rx="3"
+                fill={surf3} stroke={borderBr} strokeWidth="1" />
+            <text x="31" y="84" textAnchor="middle" fill={textDim} fontSize="6" fontFamily={mono}>HOME</text>
+
+            {/* BACK button — square, right side */}
+            <rect x={W - 42} y="70" width="22" height="20" rx="3"
+                fill={surf3} stroke={borderBr} strokeWidth="1" />
+            <text x={W - 31} y="84" textAnchor="middle" fill={textDim} fontSize="6" fontFamily={mono}>BACK</text>
+
+            {/* LCD — inset, center of panel */}
+            <rect x="48" y="66" width={W - 96} height="70" rx="4"
+                fill="#dde8e2" stroke="#9ab0a8" strokeWidth="1" />
+            {/* Process name */}
+            <text x={cx} y="96" textAnchor="middle"
+                fill="#1a2820" fontSize="11" fontFamily={mono} fontWeight="600">MIG Steel C25</text>
+            {/* Torch icon */}
+            <g transform={`translate(${cx - 18}, 98)`}>
+                <rect x="4" y="5" width="20" height="7" rx="3" fill="#3a5040" />
+                <rect x="21" y="6" width="7" height="5" rx="2" fill="#2a3830" />
+                <line x1="28" y1="8.5" x2="33" y2="5" stroke="#c8922a" strokeWidth="1.5" strokeLinecap="round" />
+                <line x1="28" y1="8.5" x2="34" y2="8.5" stroke="#c8922a" strokeWidth="1.5" strokeLinecap="round" />
+                <line x1="28" y1="8.5" x2="33" y2="12" stroke="#c8922a" strokeWidth="1.5" strokeLinecap="round" />
+                <rect x="0" y="3" width="7" height="11" rx="2" fill="#2a3830" />
             </g>
-            {/* Bottom info bar on LCD */}
-            <rect x="50" y="154" width={W - 100} height="10" rx="0"
-                fill="#b8c8c0" />
-            {/* Small setting icons row */}
-            {[0,1,2,3,4,5,6,7,8].map(i => (
-                <rect key={i} x={53 + i * 15} y="156" width="10" height="6"
+            {/* Settings bar at LCD bottom */}
+            <rect x="48" y="128" width={W - 96} height="8" rx="0" fill="#b0c4bc" />
+            {[0,1,2,3,4,5,6,7].map(i => (
+                <rect key={i} x={51 + i * 17} y="130" width="12" height="4"
                     rx="1" fill={i === 3 ? "#6a8878" : "#c8d8d0"} />
             ))}
 
-            {/* HOME button — left of LCD */}
-            <rect x="16" y="96" width="24" height="22" rx="4"
+            {/* ⊕ A label left of knobs row */}
+            <text x="24" y="175" textAnchor="middle" fill={textDim} fontSize="7" fontFamily={mono}>⊕ A</text>
+            {/* V label right of knobs row */}
+            <text x={W - 24} y="175" textAnchor="middle" fill={textDim} fontSize="7" fontFamily={mono}>V</text>
+
+            {/* Three knobs — evenly spaced, same size, below LCD */}
+            <Knob cx={58}  cy={168} r={18} label="LEFT" />
+            <Knob cx={cx}  cy={168} r={18} label="CTRL" />
+            <Knob cx={W - 58} cy={168} r={18} label="RIGHT" />
+
+            {/* ── 3. VULCAN fascia band ────────────────────────────────── */}
+            <rect x="12" y="206" width={W - 24} height="28" rx="4"
+                fill={surf2} stroke={border} strokeWidth="1" />
+            <text x={cx} y="225" textAnchor="middle"
+                fill={borderBr} fontSize="14" fontFamily={mono} fontWeight="900" letterSpacing="4">VULCAN</text>
+
+            {/* ── 4. Middle section ────────────────────────────────────── */}
+            <rect x="12" y="236" width={W - 24} height="62" rx="4"
+                fill={surf2} stroke={border} strokeWidth="1" />
+
+            {/* MIG Gun / Spool Gun Cable Socket — left box */}
+            <rect x="16" y="240" width="70" height="54" rx="4"
                 fill={surf3} stroke={borderBr} strokeWidth="1" />
-            <text x="28" y="111" textAnchor="middle"
-                fill={textDim} fontSize="7" fontFamily={mono}>HOME</text>
-
-            {/* BACK button — right of LCD */}
-            <rect x={W - 40} y="96" width="24" height="22" rx="4"
-                fill={surf3} stroke={borderBr} strokeWidth="1" />
-            <text x={W - 28} y="111" textAnchor="middle"
-                fill={textDim} fontSize="7" fontFamily={mono}>BACK</text>
-
-            {/* ── Three knobs row ─────────────────────────────────────── */}
-            {/* Left knob: wire feed / current (⊕ A) */}
-            {/* Center knob: main control (larger) */}
-            {/* Right knob: voltage (V) */}
-
-            {/* knob helper: outer ring, inner knob body, indicator line */}
-            {/* Left knob */}
-            <circle cx="58" cy="224" r="26" fill={surf2} stroke={border} strokeWidth="1" />
-            <circle cx="58" cy="224" r="20" fill={surf3} stroke={borderBr} strokeWidth="1.5" />
-            <circle cx="58" cy="224" r="12" fill={surf2} stroke={border} strokeWidth="0.75" />
-            {/* orange arrow indicator */}
-            <polygon points="54,208 58,200 62,208" fill={accent} />
-            <text x="58" y="258" textAnchor="middle" fill={textDim} fontSize="8" fontFamily={mono}>⊕  A</text>
-
-            {/* Center main control knob (larger) */}
-            <circle cx={cx} cy="222" r="30" fill={surf2} stroke={border} strokeWidth="1" />
-            <circle cx={cx} cy="222" r="23" fill={surf3} stroke={borderBr} strokeWidth="1.5" />
-            <circle cx={cx} cy="222" r="14" fill={surf2} stroke={border} strokeWidth="0.75" />
-            <polygon points={`${cx-5},205 ${cx},196 ${cx+5},205`} fill={accent} />
-            <text x={cx} y="260" textAnchor="middle" fill={textDim} fontSize="8" fontFamily={mono}>CONTROL</text>
-
-            {/* Right knob: voltage */}
-            <circle cx={W - 58} cy="224" r="26" fill={surf2} stroke={border} strokeWidth="1" />
-            <circle cx={W - 58} cy="224" r="20" fill={surf3} stroke={borderBr} strokeWidth="1.5" />
-            <circle cx={W - 58} cy="224" r="12" fill={surf2} stroke={border} strokeWidth="0.75" />
-            <polygon points={`${W-62},208 ${W-58},200 ${W-54},208`} fill={accent} />
-            <text x={W - 58} y="258" textAnchor="middle" fill={textDim} fontSize="8" fontFamily={mono}>V</text>
-
-            {/* ── Middle section: Storage | Power Switch | Cooling fins ── */}
-            {/* Background band */}
-            <rect x="14" y="268" width={W - 28} height="46" rx="4"
-                fill={surf2} stroke={border} strokeWidth="0.75" />
-
-            {/* Storage compartment door — left third */}
-            <rect x="18" y="272" width="62" height="38" rx="4"
-                fill={surf3} stroke={borderBr} strokeWidth="1" />
-            {/* Finger-pull hole */}
-            <circle cx="49" cy="295" r="8" fill={bg} stroke={border} strokeWidth="1" />
-            <circle cx="49" cy="295" r="4" fill={surf} stroke={borderBr} strokeWidth="0.75" />
+            {/* multi-pin socket inside */}
+            <circle cx="38" cy="258" r="12" fill={surf2} stroke={borderBr} strokeWidth="1.5" />
+            <circle cx="38" cy="258" r="8" fill={bg} stroke={border} strokeWidth="0.75" />
+            {[0,1,2,3,4].map(i => {
+                const a = (i / 5) * Math.PI * 2 - Math.PI / 2
+                return <circle key={i} cx={38 + 4.5 * Math.cos(a)} cy={258 + 4.5 * Math.sin(a)} r="1.5" fill={borderBr} />
+            })}
+            <circle cx="38" cy="258" r="1.5" fill={borderBr} />
+            <text x="38" y="280" textAnchor="middle" fill={textDim} fontSize="6" fontFamily={mono}>GUN</text>
+            {/* Spool Gun Gas Outlet — small nipple bottom-left of socket box */}
+            <circle cx="68" cy="276" r="5" fill={surf2} stroke={borderBr} strokeWidth="1" />
+            <circle cx="68" cy="276" r="2.5" fill={bg} />
+            <text x="68" y="290" textAnchor="middle" fill={textDim} fontSize="5.5" fontFamily={mono}>GAS</text>
 
             {/* Power switch — center */}
-            {/* Switch housing */}
-            <rect x="94" y="276" width="30" height="34" rx="3"
+            <rect x="97" y="248" width="32" height="36" rx="3"
                 fill={surf3} stroke={borderBr} strokeWidth="1" />
-            {/* I (on) rocker — top half, green tint */}
-            <rect x="96" y="278" width="26" height="13" rx="2" fill="#1a2a1a" stroke={border} strokeWidth="0.5" />
-            <text x="109" y="288" textAnchor="middle" fill={green} fontSize="9" fontFamily={mono} fontWeight="700">I</text>
-            {/* O (off) rocker — bottom half */}
-            <rect x="96" y="293" width="26" height="13" rx="2" fill={surf2} stroke={border} strokeWidth="0.5" />
-            <text x="109" y="303" textAnchor="middle" fill={textDim} fontSize="9" fontFamily={mono}>O</text>
+            <rect x="99" y="250" width="28" height="15" rx="2" fill="#182018" stroke={border} strokeWidth="0.5" />
+            <text x="113" y="261" textAnchor="middle" fill={green} fontSize="9" fontFamily={mono} fontWeight="700">I</text>
+            <rect x="99" y="267" width="28" height="13" rx="2" fill={surf2} stroke={border} strokeWidth="0.5" />
+            <text x="113" y="277" textAnchor="middle" fill={textDim} fontSize="9" fontFamily={mono}>O</text>
 
-            {/* Cooling fins — right third, horizontal slats */}
-            {Array.from({ length: 6 }, (_, k) => (
-                <rect key={k}
-                    x="132" y={274 + k * 6}
-                    width={W - 148} height="4"
-                    rx="1"
-                    fill={surf} stroke={border} strokeWidth="0.5" />
+            {/* Cooling fins — right side (Storage Compartment area) */}
+            <rect x="138" y="240" width={W - 154} height="54" rx="4"
+                fill={surf3} stroke={border} strokeWidth="0.75" />
+            {Array.from({ length: 8 }, (_, k) => (
+                <rect key={k} x="141" y={244 + k * 6} width={W - 160} height="4"
+                    rx="1" fill={surf} stroke={border} strokeWidth="0.5" />
             ))}
 
-            {/* Spool Gun Gas Outlet — small barbed nipple above fins */}
-            <circle cx={W - 22} cy="264" r="5" fill={surf3} stroke={borderBr} strokeWidth="1" />
-            <circle cx={W - 22} cy="264" r="2.5" fill={bg} />
-            <text x={W - 22} y="258" textAnchor="middle" fill={textDim} fontSize="6" fontFamily={mono}>GAS</text>
+            {/* ── 5. Bottom connector base ─────────────────────────────── */}
+            <rect x="12" y="300" width={W - 24} height="52" rx="6"
+                fill="#141820" stroke={borderBr} strokeWidth="1.5" />
 
-            {/* ── Connector strip ──────────────────────────────────────── */}
-            {/* Lower sub-panel */}
-            <rect x="10" y="318" width={W - 20} height="50" rx="4"
-                fill={surf3} stroke={borderBr} strokeWidth="1" />
+            {/* Spool Gun Gas Outlet — far left, small */}
+            <circle cx="30" cy="326" r="7" fill={surf3} stroke={borderBr} strokeWidth="1" />
+            <circle cx="30" cy="326" r="3.5" fill={bg} />
+            <text x="30" y="342" textAnchor="middle" fill={textDim} fontSize="6" fontFamily={mono}>GAS</text>
 
-            {/* 1. Multi-pin control socket (torch/trigger) — far left */}
-            <circle cx="35" cy="343" r="14" fill={surf2} stroke={borderBr} strokeWidth="1.5" />
-            <circle cx="35" cy="343" r="9" fill={bg} stroke={border} strokeWidth="0.75" />
-            {[0,1,2,3,4].map(i => {
-                const angle = (i / 5) * Math.PI * 2 - Math.PI / 2
-                return <circle key={i} cx={35 + 5 * Math.cos(angle)} cy={343 + 5 * Math.sin(angle)} r="1.5" fill={borderBr} />
-            })}
-            <circle cx="35" cy="343" r="1.5" fill={borderBr} />
-            <text x="35" y="362" textAnchor="middle" fill={textDim} fontSize="6" fontFamily={mono}>CTRL</text>
+            {/* Torch icon label */}
+            <text x="52" y="322" textAnchor="middle" fill={textDim} fontSize="9" fontFamily={mono}>⊙</text>
+            <text x="52" y="342" textAnchor="middle" fill={textDim} fontSize="5.5" fontFamily={mono}>TORCH</text>
 
-            {/* 2. Wire Feed Power Cable stud — gold */}
-            <circle cx="72" cy="343" r="12" fill={surf2} stroke={borderBr} strokeWidth="1.5" />
-            <circle cx="72" cy="343" r="7" fill="#7a6020" stroke="#a08030" strokeWidth="1" />
-            <text x="72" y="362" textAnchor="middle" fill={textDim} fontSize="6" fontFamily={mono}>WIRE</text>
+            {/* Negative Socket — large gold twist-lock */}
+            <circle cx="90" cy="322" r="16" fill={surf2} stroke={borderBr} strokeWidth="1.5" />
+            <circle cx="90" cy="322" r="11" fill="#8a6818" stroke="#c09030" strokeWidth="1.5" />
+            <circle cx="90" cy="322" r="5" fill="#6a5010" />
+            <text x="90" y="310" textAnchor="middle" fill={textMut} fontSize="7" fontFamily={mono}>−</text>
+            <text x="90" y="345" textAnchor="middle" fill={textDim} fontSize="6" fontFamily={mono}>NEG</text>
 
-            {/* Torch icon label between wire and neg */}
-            <text x="103" y="340" textAnchor="middle" fill={textDim} fontSize="9" fontFamily={mono}>⊙</text>
+            {/* Wire Feed Power Cable — large gold twist-lock */}
+            <circle cx="148" cy="322" r="16" fill={surf2} stroke={borderBr} strokeWidth="1.5" />
+            <circle cx="148" cy="322" r="11" fill="#8a6818" stroke="#c09030" strokeWidth="1.5" />
+            <circle cx="148" cy="322" r="5" fill="#6a5010" />
+            <text x="148" y="310" textAnchor="middle" fill={textMut} fontSize="7" fontFamily={mono}>+</text>
+            <text x="148" y="345" textAnchor="middle" fill={textDim} fontSize="6" fontFamily={mono}>WIRE</text>
 
-            {/* 3. Negative socket — gold */}
-            <circle cx="130" cy="343" r="12" fill={surf2} stroke={borderBr} strokeWidth="1.5" />
-            <circle cx="130" cy="343" r="7" fill="#7a6020" stroke="#a08030" strokeWidth="1" />
-            <text x="130" y="347" textAnchor="middle" fill="#d4a830" fontSize="10" fontFamily={mono} fontWeight="700">−</text>
-            <text x="130" y="362" textAnchor="middle" fill={textDim} fontSize="6" fontFamily={mono}>NEG</text>
-
-            {/* 4. Positive socket — gold */}
-            <circle cx="175" cy="343" r="12" fill={surf2} stroke={borderBr} strokeWidth="1.5" />
-            <circle cx="175" cy="343" r="7" fill="#7a6020" stroke="#a08030" strokeWidth="1" />
-            <text x="175" y="347" textAnchor="middle" fill="#d4a830" fontSize="10" fontFamily={mono} fontWeight="700">+</text>
-            <text x="175" y="362" textAnchor="middle" fill={textDim} fontSize="6" fontFamily={mono}>POS</text>
-
-            {/* 5. Far-right stud */}
-            <circle cx="218" cy="343" r="12" fill={surf2} stroke={borderBr} strokeWidth="1.5" />
-            <circle cx="218" cy="343" r="7" fill="#7a6020" stroke="#a08030" strokeWidth="1" />
+            {/* Positive Socket — large gold twist-lock */}
+            <circle cx="210" cy="322" r="16" fill={surf2} stroke={borderBr} strokeWidth="1.5" />
+            <circle cx="210" cy="322" r="11" fill="#8a6818" stroke="#c09030" strokeWidth="1.5" />
+            <circle cx="210" cy="322" r="5" fill="#6a5010" />
+            <text x="210" y="345" textAnchor="middle" fill={textDim} fontSize="6" fontFamily={mono}>POS</text>
         </svg>
     )
 }
