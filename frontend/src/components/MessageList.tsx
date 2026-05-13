@@ -233,71 +233,65 @@ function MachineSVG() {
             <rect x="12" y="236" width={W - 24} height="62" rx="4"
                 fill={surf2} stroke={border} strokeWidth="1" />
 
-            {/* MIG Gun / Spool Gun Cable Socket — left box */}
-            <rect x="16" y="240" width="70" height="54" rx="4"
-                fill={surf3} stroke={borderBr} strokeWidth="1" />
-            {/* multi-pin socket inside */}
-            <circle cx="38" cy="258" r="12" fill={surf2} stroke={borderBr} strokeWidth="1.5" />
-            <circle cx="38" cy="258" r="8" fill={bg} stroke={border} strokeWidth="0.75" />
+            {/* LEFT: MIG/Spool Gun Cable Socket — rectangular hole with rounded corners */}
+            {/* The "hole" is a recessed rectangle; socket circle sits near the right inner edge */}
+            <rect x="18" y="242" width="68" height="50" rx="5"
+                fill={bg} stroke={borderBr} strokeWidth="1" />
+            {/* socket circle — centered vertically, near right side of hole */}
+            <circle cx="71" cy="267" r="13" fill={surf3} stroke={borderBr} strokeWidth="1.5" />
+            <circle cx="71" cy="267" r="9" fill={bg} stroke={border} strokeWidth="0.75" />
             {[0,1,2,3,4].map(i => {
                 const a = (i / 5) * Math.PI * 2 - Math.PI / 2
-                return <circle key={i} cx={38 + 4.5 * Math.cos(a)} cy={258 + 4.5 * Math.sin(a)} r="1.5" fill={borderBr} />
+                return <circle key={i} cx={71 + 5 * Math.cos(a)} cy={267 + 5 * Math.sin(a)} r="1.5" fill={borderBr} />
             })}
-            <circle cx="38" cy="258" r="1.5" fill={borderBr} />
-            <text x="38" y="280" textAnchor="middle" fill={textDim} fontSize="6" fontFamily={mono}>GUN</text>
-            {/* Spool Gun Gas Outlet — small nipple bottom-left of socket box */}
-            <circle cx="68" cy="276" r="5" fill={surf2} stroke={borderBr} strokeWidth="1" />
-            <circle cx="68" cy="276" r="2.5" fill={bg} />
-            <text x="68" y="290" textAnchor="middle" fill={textDim} fontSize="5.5" fontFamily={mono}>GAS</text>
+            <circle cx="71" cy="267" r="1.5" fill={borderBr} />
+            <text x="44" y="300" textAnchor="middle" fill={textDim} fontSize="6" fontFamily={mono}>MIG/GUN</text>
 
-            {/* Power switch — center */}
-            <rect x="97" y="248" width="32" height="36" rx="3"
+            {/* CENTER: Power switch */}
+            <rect x="98" y="248" width="30" height="36" rx="3"
                 fill={surf3} stroke={borderBr} strokeWidth="1" />
-            <rect x="99" y="250" width="28" height="15" rx="2" fill="#182018" stroke={border} strokeWidth="0.5" />
+            <rect x="100" y="250" width="26" height="15" rx="2" fill="#182018" stroke={border} strokeWidth="0.5" />
             <text x="113" y="261" textAnchor="middle" fill={green} fontSize="9" fontFamily={mono} fontWeight="700">I</text>
-            <rect x="99" y="267" width="28" height="13" rx="2" fill={surf2} stroke={border} strokeWidth="0.5" />
+            <rect x="100" y="267" width="26" height="13" rx="2" fill={surf2} stroke={border} strokeWidth="0.5" />
             <text x="113" y="277" textAnchor="middle" fill={textDim} fontSize="9" fontFamily={mono}>O</text>
 
-            {/* Cooling fins — right side (Storage Compartment area) */}
-            <rect x="138" y="240" width={W - 154} height="54" rx="4"
+            {/* RIGHT: Horizontal cooling fins */}
+            <rect x="136" y="240" width={W - 150} height="54" rx="4"
                 fill={surf3} stroke={border} strokeWidth="0.75" />
             {Array.from({ length: 8 }, (_, k) => (
-                <rect key={k} x="141" y={244 + k * 6} width={W - 160} height="4"
+                <rect key={k} x="139" y={243 + k * 6} width={W - 157} height="4"
                     rx="1" fill={surf} stroke={border} strokeWidth="0.5" />
             ))}
 
             {/* ── 5. Bottom connector base ─────────────────────────────── */}
-            <rect x="12" y="300" width={W - 24} height="52" rx="6"
+            <rect x="12" y="300" width={W - 24} height="56" rx="6"
                 fill="#141820" stroke={borderBr} strokeWidth="1.5" />
 
-            {/* Spool Gun Gas Outlet — far left, small */}
-            <circle cx="30" cy="326" r="7" fill={surf3} stroke={borderBr} strokeWidth="1" />
-            <circle cx="30" cy="326" r="3.5" fill={bg} />
-            <text x="30" y="342" textAnchor="middle" fill={textDim} fontSize="6" fontFamily={mono}>GAS</text>
+            {/* Spool Gun Gas Outlet — far left, small circle */}
+            <circle cx="28" cy="326" r="7" fill={surf3} stroke={borderBr} strokeWidth="1" />
+            <circle cx="28" cy="326" r="3.5" fill={bg} />
+            <text x="28" y="343" textAnchor="middle" fill={textDim} fontSize="5.5" fontFamily={mono}>GAS</text>
 
-            {/* Torch icon label */}
-            <text x="52" y="322" textAnchor="middle" fill={textDim} fontSize="9" fontFamily={mono}>⊙</text>
-            <text x="52" y="342" textAnchor="middle" fill={textDim} fontSize="5.5" fontFamily={mono}>TORCH</text>
+            {/* Negative Socket (−) — dead center of section */}
+            <circle cx={cx} cy="322" r="17" fill={surf2} stroke={borderBr} strokeWidth="1.5" />
+            <circle cx={cx} cy="322" r="12" fill="#8a6818" stroke="#c09030" strokeWidth="1.5" />
+            <circle cx={cx} cy="322" r="5.5" fill="#5a4010" />
+            <text x={cx} y="308" textAnchor="middle" fill={textMut} fontSize="8" fontFamily={mono} fontWeight="700">−</text>
+            <text x={cx} y="347" textAnchor="middle" fill={textDim} fontSize="6" fontFamily={mono}>NEG</text>
 
-            {/* Negative Socket — large gold twist-lock */}
-            <circle cx="90" cy="322" r="16" fill={surf2} stroke={borderBr} strokeWidth="1.5" />
-            <circle cx="90" cy="322" r="11" fill="#8a6818" stroke="#c09030" strokeWidth="1.5" />
-            <circle cx="90" cy="322" r="5" fill="#6a5010" />
-            <text x="90" y="310" textAnchor="middle" fill={textMut} fontSize="7" fontFamily={mono}>−</text>
-            <text x="90" y="345" textAnchor="middle" fill={textDim} fontSize="6" fontFamily={mono}>NEG</text>
+            {/* Wire Feed Power Cable — smaller, between NEG and POS, lower */}
+            {/* sits below vertical center, between cx and POS */}
+            <circle cx="185" cy="334" r="10" fill={surf2} stroke={borderBr} strokeWidth="1.25" />
+            <circle cx="185" cy="334" r="6.5" fill="#8a6818" stroke="#c09030" strokeWidth="1" />
+            <circle cx="185" cy="334" r="3" fill="#5a4010" />
+            <text x="185" y="350" textAnchor="middle" fill={textDim} fontSize="5.5" fontFamily={mono}>WIRE</text>
 
-            {/* Wire Feed Power Cable — large gold twist-lock */}
-            <circle cx="148" cy="322" r="16" fill={surf2} stroke={borderBr} strokeWidth="1.5" />
-            <circle cx="148" cy="322" r="11" fill="#8a6818" stroke="#c09030" strokeWidth="1.5" />
-            <circle cx="148" cy="322" r="5" fill="#6a5010" />
-            <text x="148" y="310" textAnchor="middle" fill={textMut} fontSize="7" fontFamily={mono}>+</text>
-            <text x="148" y="345" textAnchor="middle" fill={textDim} fontSize="6" fontFamily={mono}>WIRE</text>
-
-            {/* Positive Socket — large gold twist-lock */}
-            <circle cx="210" cy="322" r="16" fill={surf2} stroke={borderBr} strokeWidth="1.5" />
-            <circle cx="210" cy="322" r="11" fill="#8a6818" stroke="#c09030" strokeWidth="1.5" />
-            <circle cx="210" cy="322" r="5" fill="#6a5010" />
-            <text x="210" y="345" textAnchor="middle" fill={textDim} fontSize="6" fontFamily={mono}>POS</text>
+            {/* Positive Socket (+) — right */}
+            <circle cx="222" cy="322" r="17" fill={surf2} stroke={borderBr} strokeWidth="1.5" />
+            <circle cx="222" cy="322" r="12" fill="#8a6818" stroke="#c09030" strokeWidth="1.5" />
+            <circle cx="222" cy="322" r="5.5" fill="#5a4010" />
+            <text x="222" y="308" textAnchor="middle" fill={textMut} fontSize="8" fontFamily={mono} fontWeight="700">+</text>
+            <text x="222" y="347" textAnchor="middle" fill={textDim} fontSize="6" fontFamily={mono}>POS</text>
         </svg>
     )
 }
