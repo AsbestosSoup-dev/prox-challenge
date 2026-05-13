@@ -43,6 +43,7 @@ export default function InputBar({
     const [isTranscribing, setIsTranscribing] = useState(false)
     const mediaRecorderRef = useRef<MediaRecorder | null>(null)
     const chunksRef = useRef<Blob[]>([])
+    const recordingStartRef = useRef<number>(0)
     const valueRef = useRef(value)
     valueRef.current = value
 
@@ -78,8 +79,9 @@ export default function InputBar({
                 }
             }
 
-            mediaRecorder.start()
+            mediaRecorder.start(100)
             mediaRecorderRef.current = mediaRecorder
+            recordingStartRef.current = Date.now()
             setIsRecording(true)
         } catch {
             // mic permission denied or not available
@@ -87,9 +89,16 @@ export default function InputBar({
     }
 
     const stopRecording = () => {
-        mediaRecorderRef.current?.stop()
-        mediaRecorderRef.current = null
-        setIsRecording(false)
+        const elapsed = Date.now() - recordingStartRef.current
+        const doStop = () => {
+            mediaRecorderRef.current?.stop()
+            mediaRecorderRef.current = null
+            setIsRecording(false)
+        }
+        // ensure at least 300ms of audio so the blob isn't empty
+        const remaining = 300 - elapsed
+        if (remaining > 0) setTimeout(doStop, remaining)
+        else doStop()
     }
 
     const handleMicPointerDown = (e: React.PointerEvent) => {
