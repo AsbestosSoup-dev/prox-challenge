@@ -176,7 +176,7 @@ function MachineSVG({ lcdProcess }: { lcdProcess?: string | null }) {
     const lcdBarSel  = isDark ? "#6a8878" : "#4a6858"
     const torchBody  = isDark ? "#3a5040" : "#2a4030"
     const torchNeck  = isDark ? "#2a3830" : "#1a2820"
-    const switchOn   = isDark ? "#182018" : "#0e160e"
+    const switchOn   = isDark ? "#182018" : "#2a3a2a"
     const connBase   = isDark ? "#141820" : surf3
     const panel      = isDark ? "#1a1e24" : surf2
 
