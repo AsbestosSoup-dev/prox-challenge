@@ -42,15 +42,32 @@ function themeStyle(isDark: boolean) {
 function buildSrcDoc(artifact: Artifact, isDark: boolean): string {
     if (artifact.type === "application/vnd.ant.react") {
         const cleaned = artifact.content
-            .replace(/import\s+.*?from\s+['"]react['"]/g, '')
-            .replace(/export default function\s+(\w+)/, (_, name) => `function ${name}`)
-            .replace(/export default\s+(\w+)/, '')
+            // Remove all React imports
+            .replace(/import\s+.*?from\s+['"]react['"]\s*;?\n?/g, '')
+            // Remove other imports (lucide, etc.) that won't resolve in sandbox
+            .replace(/import\s+.*?from\s+['"][^'"]+['"]\s*;?\n?/g, '')
+            // export default function Foo → function Foo
+            .replace(/export\s+default\s+function\s+(\w+)/, (_, name) => `function ${name}`)
+            // export default Foo (bare identifier at end)
+            .replace(/export\s+default\s+(\w+)\s*;?\s*$/, '')
+            // export default () => ... or export default (props) => ...
+            .replace(/export\s+default\s+(\(|(\w+)\s*=>)/, 'function __AnonComponent__')
 
-        const nameMatch = artifact.content.match(/export default function\s+(\w+)/)
-        const componentName = nameMatch ? nameMatch[1] : null
-        const renderCall = componentName
-            ? `ReactDOM.createRoot(document.getElementById('root')).render(React.createElement(${componentName}));`
-            : `console.error('Could not find default export to render');`
+        // Find component name: named function, or fallback
+        const nameMatch =
+            artifact.content.match(/export\s+default\s+function\s+(\w+)/) ||
+            artifact.content.match(/function\s+(\w+)\s*\(/)
+        const componentName = nameMatch ? nameMatch[1] : '__AnonComponent__'
+        const renderCall = `
+            try {
+                const el = typeof ${componentName} !== 'undefined'
+                    ? React.createElement(${componentName})
+                    : React.createElement('div', {style:{color:'red',padding:16}}, 'Component not found: ${componentName}');
+                ReactDOM.createRoot(document.getElementById('root')).render(el);
+            } catch(e) {
+                document.getElementById('root').innerHTML =
+                    '<pre style="color:red;padding:16px;font-size:12px">' + e.message + '</pre>';
+            }`
 
         return `<!DOCTYPE html>
 <html class="${isDark ? "dark" : ""}">
@@ -67,6 +84,10 @@ function buildSrcDoc(artifact: Artifact, isDark: boolean): string {
 <body>
   <div id="root"></div>
   <script>
+    window.onerror = (msg, src, line, col, err) => {
+      document.getElementById('root').innerHTML =
+        '<pre style="color:red;padding:16px;font-size:12px;white-space:pre-wrap">' + (err?.message || msg) + '</pre>';
+    };
     window.addEventListener('message', (e) => {
       if (e.data?.type === 'theme') {
         document.documentElement.className = e.data.isDark ? 'dark' : ''
