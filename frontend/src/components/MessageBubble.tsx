@@ -53,8 +53,6 @@ function ArtifactLoadingWidget({ raw, completing }: { raw: string; completing: b
         return () => clearInterval(interval)
     }, [])
 
-    // Step 1: when completing starts, freeze bead at current rendered width
-    // Step 2: next frame, set width to 100% — CSS transition does the rest
     const [completingTo100, setCompletingTo100] = useState(false)
 
     useEffect(() => {
@@ -64,7 +62,6 @@ function ArtifactLoadingWidget({ raw, completing }: { raw: string; completing: b
         const beadWidth = beadRef.current.getBoundingClientRect().width
         const pct = trackWidth > 0 ? (beadWidth / trackWidth) * 100 : 0
         setFrozenPct(pct)
-        // next frame: trigger transition to 100%
         requestAnimationFrame(() => {
             requestAnimationFrame(() => setCompletingTo100(true))
         })
@@ -117,103 +114,183 @@ function ArtifactLoadingWidget({ raw, completing }: { raw: string; completing: b
     )
 }
 
-export default function MessageBubble({ message, isStreaming }: Props) {
-    const [showCompleting, setShowCompleting] = useState(false)
-    const [showArtifact, setShowArtifact] = useState(false)
-    const [lightbox, setLightbox] = useState<{ src: string; alt: string } | null>(null)
-    const wasLoadingRef = useRef(false)
+// ─── Spec card detection ──────────────────────────────────────────────────────
+// Looks for patterns like "250 A", "10–100%", "14 lb", "60 Hz" in text
+interface SpecEntry { label: string; value: string; unit: string }
 
-    const raw = message._raw ?? message.content
-    const hadArtifact = isArtifactInProgress(raw) || raw.includes("</antartifact>")
+const SPEC_VALUE_RE = /^(\d[\d,./–-]*)\s*([A-Za-z%°][A-Za-z%°/²³]*)?\s*$/
 
-    useEffect(() => {
-        if (isStreaming && hadArtifact) {
-            wasLoadingRef.current = true
+function extractSpecs(text: string): SpecEntry[] | null {
+    // Only trigger when text looks like a spec list: multiple "label: value" lines
+    const lines = text.split("\n").map(l => l.trim()).filter(Boolean)
+    const specs: SpecEntry[] = []
+    for (const line of lines) {
+        const colonIdx = line.indexOf(":")
+        if (colonIdx < 3 || colonIdx > 40) continue
+        const label = line.slice(0, colonIdx).replace(/^[-*•]\s*/, "").trim()
+        const rest = line.slice(colonIdx + 1).trim()
+        const m = SPEC_VALUE_RE.exec(rest)
+        if (!m) continue
+        specs.push({ label, value: m[1], unit: m[2] ?? "" })
+    }
+    return specs.length >= 2 ? specs : null
+}
+
+// ─── Inline rendering ─────────────────────────────────────────────────────────
+function renderInline(text: string) {
+    return text.split(/(\*\*[^*]+\*\*|\[[^\]]+\])/g).map((part, i) => {
+        if (part.startsWith("**") && part.endsWith("**"))
+            return <strong key={i}>{part.slice(2, -2)}</strong>
+        if (part.startsWith("[") && part.endsWith("]"))
+            return <span key={i} className="citation">{part}</span>
+        return part
+    })
+}
+
+// ─── Block parser ─────────────────────────────────────────────────────────────
+type Block =
+    | { type: "p"; text: string }
+    | { type: "h1"; text: string }
+    | { type: "h2"; text: string }
+    | { type: "h3"; text: string }
+    | { type: "ul"; items: string[] }
+    | { type: "ol"; items: string[] }
+    | { type: "table"; rows: string[][] }
+    | { type: "specs"; entries: SpecEntry[] }
+
+function parseBlocks(text: string): Block[] {
+    const normalized = text
+        .replace(/(\n\n)(?=\d+[.)]\s)/g, "\n")
+        .replace(/(\n\n)(?=[-*]\s)/g, "\n")
+    const lines = normalized.split("\n")
+    const blocks: Block[] = []
+
+    let i = 0
+    while (i < lines.length) {
+        const line = lines[i].trim()
+        if (!line || /^-{3,}$/.test(line)) { i++; continue }
+
+        if (/^#{1,3}\s/.test(line)) {
+            const level = line.match(/^(#{1,3})\s/)![1].length as 1 | 2 | 3
+            const t = line.replace(/^#{1,3}\s+/, "")
+            blocks.push({ type: `h${level}` as "h1" | "h2" | "h3", text: t })
+            i++
+            continue
         }
-        if (!isStreaming && wasLoadingRef.current) {
-            wasLoadingRef.current = false
-            setShowCompleting(true)
-            setTimeout(() => {
-                setShowCompleting(false)
-                setShowArtifact(true)
-            }, COMPLETE_MS + 100)
-        }
-    }, [isStreaming, hadArtifact])
 
-    if (message.role === "user") {
-        return (
-            <div className="msg-row msg-user">
-                <div className="bubble bubble-user">
-                    {message.image_data?.map((img, i) => {
-                        const src = `data:${message.image_type?.[i] ?? "image/jpeg"};base64,${img}`
-                        return (
-                            <img
-                                key={i}
-                                src={src}
-                                alt="uploaded"
-                                className="uploaded-image"
-                                onClick={() => setLightbox({ src, alt: "uploaded image" })}
-                                style={{ cursor: "zoom-in" }}
-                            />
-                        )
-                    })}
-                    <span>{message.content}</span>
-                </div>
-                {lightbox && <Lightbox src={lightbox.src} alt={lightbox.alt} onClose={() => setLightbox(null)} />}
-            </div>
-        )
+        if (/^[-*]\s/.test(line)) {
+            const items: string[] = []
+            while (i < lines.length && /^[-*]\s/.test(lines[i].trim())) {
+                items.push(lines[i].trim().replace(/^[-*]\s*/, ""))
+                i++
+            }
+            blocks.push({ type: "ul", items })
+            continue
+        }
+
+        if (/^\d+[.)]\s/.test(line)) {
+            const items: string[] = []
+            while (i < lines.length && /^\d+[.)]\s/.test(lines[i].trim())) {
+                items.push(lines[i].trim().replace(/^\d+[.)]\s*/, ""))
+                i++
+            }
+            blocks.push({ type: "ol", items })
+            continue
+        }
+
+        if (/^\|/.test(line)) {
+            const rows: string[][] = []
+            while (i < lines.length && /^\|/.test(lines[i].trim())) {
+                const row = lines[i].trim()
+                if (!/^\|[-| :]+\|$/.test(row)) {
+                    rows.push(row.split("|").slice(1, -1).map(c => c.trim()))
+                }
+                i++
+            }
+            if (rows.length) blocks.push({ type: "table", rows })
+            continue
+        }
+
+        // Paragraph — accumulate
+        const textLines: string[] = []
+        while (
+            i < lines.length &&
+            lines[i].trim() &&
+            !/^[-*]\s/.test(lines[i].trim()) &&
+            !/^\d+[.)]\s/.test(lines[i].trim()) &&
+            !/^\|/.test(lines[i].trim()) &&
+            !/^-{3,}$/.test(lines[i].trim()) &&
+            !/^#{1,3}\s/.test(lines[i].trim())
+        ) {
+            textLines.push(lines[i].trim())
+            i++
+        }
+        if (textLines.length) {
+            const joined = textLines.join("\n")
+            const specs = extractSpecs(joined)
+            if (specs) {
+                blocks.push({ type: "specs", entries: specs })
+            } else {
+                blocks.push({ type: "p", text: textLines.join(" ") })
+            }
+        }
     }
 
-    const artifactInProgress = isStreaming && isArtifactInProgress(raw)
+    return blocks
+}
 
-    // Show loading widget while streaming or briefly completing
-    if (artifactInProgress || showCompleting) {
-        const textBefore = getTextBeforeArtifact(raw)
-        return (
-            <div className="msg-row msg-assistant">
-                <div className="proxy-avatar">P</div>
-                <div className="assistant-body">
-                    {textBefore && (
-                        <div className="bubble bubble-assistant">
-                            <AssistantText text={textBefore} />
-                        </div>
-                    )}
-                    <ArtifactLoadingWidget raw={raw} completing={showCompleting} />
-                    {/* post-artifact text is intentionally hidden until artifact renders */}
-                </div>
-            </div>
-        )
-    }
-
-    const { before, artifacts, after } = parseArtifactsSplit(raw)
-    // For history messages (not currently streaming), always show everything immediately
-    const canShowArtifacts = showArtifact || !isStreaming
-
+function AssistantText({ text }: { text: string }) {
+    const blocks = parseBlocks(text)
     return (
-        <div className="msg-row msg-assistant">
-            <div className="proxy-avatar">P</div>
-            <div className="assistant-body">
-                {before && (
-                    <div className="bubble bubble-assistant">
-                        <AssistantText text={before} />
+        <>
+            {blocks.map((block, i) => {
+                if (block.type === "h1") return <h1 key={i} className="assistant-h1">{renderInline(block.text)}</h1>
+                if (block.type === "h2") return <h2 key={i} className="assistant-h2">{renderInline(block.text)}</h2>
+                if (block.type === "h3") return <h3 key={i} className="assistant-h3">{renderInline(block.text)}</h3>
+                if (block.type === "specs") return (
+                    <div key={i} className="spec-grid">
+                        {block.entries.map((s, j) => (
+                            <div key={j} className="spec-card">
+                                <div className="spec-value">
+                                    {s.value}
+                                    {s.unit && <span className="spec-unit">{s.unit}</span>}
+                                </div>
+                                <div className="spec-label">{s.label}</div>
+                            </div>
+                        ))}
                     </div>
-                )}
-                {canShowArtifacts && artifacts.map((artifact) => (
-                    <ArtifactRenderer key={artifact.identifier} artifact={artifact} />
-                ))}
-                {canShowArtifacts && after && (
-                    <div className="bubble bubble-assistant">
-                        <AssistantText text={after} />
-                    </div>
-                )}
-                {canShowArtifacts && message.source_pages && message.source_pages.length > 0 && (
-                    <SourcePages pages={message.source_pages} />
-                )}
-            </div>
-        </div>
+                )
+                if (block.type === "ul") return (
+                    <ul key={i} className="assistant-text assistant-list">
+                        {block.items.map((item, j) => <li key={j}>{renderInline(item)}</li>)}
+                    </ul>
+                )
+                if (block.type === "ol") return (
+                    <ol key={i} className="assistant-text assistant-list">
+                        {block.items.map((item, j) => <li key={j}>{renderInline(item)}</li>)}
+                    </ol>
+                )
+                if (block.type === "table") return (
+                    <table key={i} className="assistant-table">
+                        <tbody>
+                            {block.rows.map((row, j) => (
+                                <tr key={j}>
+                                    {row.map((cell, k) => j === 0
+                                        ? <th key={k}>{renderInline(cell)}</th>
+                                        : <td key={k}>{renderInline(cell)}</td>
+                                    )}
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
+                )
+                return <p key={i} className="assistant-text">{renderInline(block.text)}</p>
+            })}
+        </>
     )
 }
 
+// ─── Source pages ─────────────────────────────────────────────────────────────
 function SourcePages({ pages }: { pages: SourcePage[] }) {
     const [open, setOpen] = useState(false)
     const [visible, setVisible] = useState(false)
@@ -249,138 +326,86 @@ function SourcePages({ pages }: { pages: SourcePage[] }) {
     )
 }
 
-function renderInline(text: string) {
-    return text.split(/(\*\*[^*]+\*\*|\[[^\]]+\])/g).map((part, i) => {
-        if (part.startsWith("**") && part.endsWith("**"))
-            return <strong key={i}>{part.slice(2, -2)}</strong>
-        if (part.startsWith("[") && part.endsWith("]"))
-            return <span key={i} className="citation">{part}</span>
-        return part
-    })
-}
+// ─── Main component ───────────────────────────────────────────────────────────
+export default function MessageBubble({ message, isStreaming }: Props) {
+    const [showCompleting, setShowCompleting] = useState(false)
+    const [showArtifact, setShowArtifact] = useState(false)
+    const [lightbox, setLightbox] = useState<{ src: string; alt: string } | null>(null)
+    const wasLoadingRef = useRef(false)
 
-type Block =
-    | { type: "p"; text: string }
-    | { type: "h1"; text: string }
-    | { type: "h2"; text: string }
-    | { type: "h3"; text: string }
-    | { type: "ul"; items: string[] }
-    | { type: "ol"; items: string[] }
-    | { type: "table"; rows: string[][] }
+    const raw = message._raw ?? message.content
+    const hadArtifact = isArtifactInProgress(raw) || raw.includes("</antartifact>")
 
-function parseBlocks(text: string): Block[] {
-    // Collapse double newlines between list items so they're treated as one block
-    const normalized = text
-        .replace(/(\n\n)(?=\d+[.)]\s)/g, "\n")
-        .replace(/(\n\n)(?=[-*]\s)/g, "\n")
-    const lines = normalized.split("\n")
-    const blocks: Block[] = []
-
-    let i = 0
-    while (i < lines.length) {
-        const line = lines[i].trim()
-
-        if (!line || /^-{3,}$/.test(line)) { i++; continue }
-
-        // Headings
-        if (/^#{1,3}\s/.test(line)) {
-            const level = line.match(/^(#{1,3})\s/)![1].length as 1 | 2 | 3
-            const text = line.replace(/^#{1,3}\s+/, "")
-            blocks.push({ type: `h${level}` as "h1" | "h2" | "h3", text })
-            i++
-            continue
+    useEffect(() => {
+        if (isStreaming && hadArtifact) {
+            wasLoadingRef.current = true
         }
-
-        // Bullet list
-        if (/^[-*]\s/.test(line)) {
-            const items: string[] = []
-            while (i < lines.length && /^[-*]\s/.test(lines[i].trim())) {
-                items.push(lines[i].trim().replace(/^[-*]\s*/, ""))
-                i++
-            }
-            blocks.push({ type: "ul", items })
-            continue
+        if (!isStreaming && wasLoadingRef.current) {
+            wasLoadingRef.current = false
+            setShowCompleting(true)
+            setTimeout(() => {
+                setShowCompleting(false)
+                setShowArtifact(true)
+            }, COMPLETE_MS + 100)
         }
+    }, [isStreaming, hadArtifact])
 
-        // Numbered list
-        if (/^\d+[.)]\s/.test(line)) {
-            const items: string[] = []
-            while (i < lines.length && /^\d+[.)]\s/.test(lines[i].trim())) {
-                items.push(lines[i].trim().replace(/^\d+[.)]\s*/, ""))
-                i++
-            }
-            blocks.push({ type: "ol", items })
-            continue
-        }
-
-        // Table
-        if (/^\|/.test(line)) {
-            const rows: string[][] = []
-            while (i < lines.length && /^\|/.test(lines[i].trim())) {
-                const row = lines[i].trim()
-                if (!/^\|[-| :]+\|$/.test(row)) {
-                    rows.push(row.split("|").slice(1, -1).map(c => c.trim()))
-                }
-                i++
-            }
-            if (rows.length) blocks.push({ type: "table", rows })
-            continue
-        }
-
-        // Paragraph — accumulate until blank line or list/table/heading start
-        const textLines: string[] = []
-        while (
-            i < lines.length &&
-            lines[i].trim() &&
-            !/^[-*]\s/.test(lines[i].trim()) &&
-            !/^\d+[.)]\s/.test(lines[i].trim()) &&
-            !/^\|/.test(lines[i].trim()) &&
-            !/^-{3,}$/.test(lines[i].trim()) &&
-            !/^#{1,3}\s/.test(lines[i].trim())
-        ) {
-            textLines.push(lines[i].trim())
-            i++
-        }
-        if (textLines.length) blocks.push({ type: "p", text: textLines.join(" ") })
+    // ── User message ──────────────────────────────────────────────────────────
+    if (message.role === "user") {
+        const hasImages = (message.image_data?.length ?? 0) > 0
+        return (
+            <div className="turn-query">
+                <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 6, maxWidth: "75%" }}>
+                    {hasImages && (
+                        <div className="query-images">
+                            {message.image_data!.map((img, i) => {
+                                const src = `data:${message.image_type?.[i] ?? "image/jpeg"};base64,${img}`
+                                return (
+                                    <img
+                                        key={i}
+                                        src={src}
+                                        alt="uploaded"
+                                        className="query-image"
+                                        onClick={() => setLightbox({ src, alt: "uploaded image" })}
+                                    />
+                                )
+                            })}
+                        </div>
+                    )}
+                    <div className="query-pill">{message.content}</div>
+                </div>
+                {lightbox && <Lightbox src={lightbox.src} alt={lightbox.alt} onClose={() => setLightbox(null)} />}
+            </div>
+        )
     }
 
-    return blocks
-}
+    // ── Assistant — artifact loading ──────────────────────────────────────────
+    const artifactInProgress = isStreaming && isArtifactInProgress(raw)
 
-function AssistantText({ text }: { text: string }) {
-    const blocks = parseBlocks(text)
+    if (artifactInProgress || showCompleting) {
+        const textBefore = getTextBeforeArtifact(raw)
+        return (
+            <div className="turn-answer">
+                {textBefore && <AssistantText text={textBefore} />}
+                <ArtifactLoadingWidget raw={raw} completing={showCompleting} />
+            </div>
+        )
+    }
+
+    // ── Assistant — full render ───────────────────────────────────────────────
+    const { before, artifacts, after } = parseArtifactsSplit(raw)
+    const canShowArtifacts = showArtifact || !isStreaming
+
     return (
-        <>
-            {blocks.map((block, i) => {
-                if (block.type === "h1") return <h1 key={i} className="assistant-h1">{renderInline(block.text)}</h1>
-                if (block.type === "h2") return <h2 key={i} className="assistant-h2">{renderInline(block.text)}</h2>
-                if (block.type === "h3") return <h3 key={i} className="assistant-h3">{renderInline(block.text)}</h3>
-                if (block.type === "ul") return (
-                    <ul key={i} className="assistant-text assistant-list">
-                        {block.items.map((item, j) => <li key={j}>{renderInline(item)}</li>)}
-                    </ul>
-                )
-                if (block.type === "ol") return (
-                    <ol key={i} className="assistant-text assistant-list">
-                        {block.items.map((item, j) => <li key={j}>{renderInline(item)}</li>)}
-                    </ol>
-                )
-                if (block.type === "table") return (
-                    <table key={i} className="assistant-table">
-                        <tbody>
-                            {block.rows.map((row, j) => (
-                                <tr key={j}>
-                                    {row.map((cell, k) => j === 0
-                                        ? <th key={k}>{renderInline(cell)}</th>
-                                        : <td key={k}>{renderInline(cell)}</td>
-                                    )}
-                                </tr>
-                            ))}
-                        </tbody>
-                    </table>
-                )
-                return <p key={i} className="assistant-text">{renderInline(block.text)}</p>
-            })}
-        </>
+        <div className="turn-answer">
+            {before && <AssistantText text={before} />}
+            {canShowArtifacts && artifacts.map((artifact) => (
+                <ArtifactRenderer key={artifact.identifier} artifact={artifact} />
+            ))}
+            {canShowArtifacts && after && <AssistantText text={after} />}
+            {canShowArtifacts && message.source_pages && message.source_pages.length > 0 && (
+                <SourcePages pages={message.source_pages} />
+            )}
+        </div>
     )
 }
