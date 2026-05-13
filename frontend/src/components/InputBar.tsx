@@ -77,6 +77,25 @@ export default function InputBar({
     const recordingStartRef = useRef<number>(0)
     const valueRef = useRef(value)
     valueRef.current = value
+    const prevValueRef = useRef(value)
+    const [isPopulating, setIsPopulating] = useState(false)
+
+    useEffect(() => {
+        const prev = prevValueRef.current
+        prevValueRef.current = value
+        // Animate when a chip sets/switches the value (not when user types character by character)
+        const prevIsChip = HINTS.every(h => h !== prev) && prev.length > 20
+        const switched = !!prev && !!value && prev !== value && !value.startsWith(prev)
+        const populated = !prev && !!value
+        if (populated || switched) {
+            setIsPopulating(false)
+            requestAnimationFrame(() => {
+                setIsPopulating(true)
+                setTimeout(() => setIsPopulating(false), 200)
+            })
+        }
+        void prevIsChip
+    }, [value])
 
     const startRecording = async () => {
         try {
@@ -165,7 +184,6 @@ export default function InputBar({
         }
     }
 
-    const canSend = value.trim().length > 0 && !isStreaming
 
     return (
         <div className="input-area">
@@ -193,7 +211,7 @@ export default function InputBar({
                     style={{ display: "none" }}
                 />
 
-                <div className="chat-textarea-wrap">
+                <div className={`chat-textarea-wrap${isPopulating ? " chat-textarea--populating" : ""}`}>
                     {!value && !isFocused && !isRecording && !isTranscribing && !hasMessages && (
                         <span
                             className={`chat-hint${hintVisible ? " chat-hint--visible" : ""}`}
@@ -222,7 +240,6 @@ export default function InputBar({
                         placeholder=""
                         className="chat-textarea"
                         rows={1}
-                        disabled={isStreaming}
                     />
                 </div>
 
@@ -236,8 +253,8 @@ export default function InputBar({
                     </button>
                 </div>
 
-                <button className="send-btn" onClick={onSend} disabled={!canSend}>
-                    <Send size={18} />
+                <button className={`send-btn${isStreaming ? " send-btn--streaming" : ""}`} onClick={onSend} disabled={isStreaming || !value.trim()}>
+                    {isStreaming ? <span className="send-spinner" /> : <Send size={18} />}
                 </button>
             </div>
         </div>

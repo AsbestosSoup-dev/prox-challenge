@@ -187,6 +187,19 @@ body {
 }
 .send-btn:hover:not(:disabled) { background: var(--accent-bright); }
 .send-btn:disabled { opacity: 0.3; cursor: not-allowed; }
+.send-btn--streaming { opacity: 1 !important; cursor: default; }
+
+.send-spinner {
+  width: 16px;
+  height: 16px;
+  border: 2px solid rgba(255,255,255,0.3);
+  border-top-color: white;
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+}
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
 
 /* ─── Messages scroll ────────────────────────────────────────────────────────── */
 .messages-scroll {
@@ -900,6 +913,14 @@ ol.assistant-list {
   padding: 6px 6px !important;
   min-height: 34px !important;
   field-sizing: content;
+}
+
+.chat-textarea--populating .chat-textarea {
+  animation: textarea-populate 0.18s ease-out both;
+}
+@keyframes textarea-populate {
+  from { opacity: 0; transform: translateY(5px); }
+  to   { opacity: 1; transform: translateY(0); }
 }
 
 /* ─── Source pages ───────────────────────────────────────────────────────────── */
