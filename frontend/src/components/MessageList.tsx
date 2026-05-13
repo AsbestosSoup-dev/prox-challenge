@@ -154,6 +154,7 @@ function EmptyState({ onSuggestion: _, onProcessSelect, activeProcess }: {
             </div>
             <p className="welcome-title">What do you need to know?</p>
             <p className="welcome-sub">Vulcan OmniPro 220</p>
+            <p className="process-chips-label">Set up a process</p>
             <div className="process-chips">
                 {PROCESSES.map((p) => (
                     <button
