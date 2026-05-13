@@ -3,13 +3,6 @@ import { ScrollArea } from "@/components/ui/scroll-area"
 import MessageBubble from "./MessageBubble"
 import type { Message } from "../types"
 
-const SUGGESTIONS = [
-    "What's the duty cycle at max amperage?",
-    "How do I set up for MIG welding?",
-    "Walk me through flux-cored polarity",
-    "My arc keeps sputtering — what's wrong?",
-]
-
 interface Props {
     messages: (Message & { _raw?: string })[]
     isStreaming: boolean
@@ -86,7 +79,7 @@ export default function MessageList({ messages, isStreaming, isPending, onSugges
     )
 }
 
-function EmptyState({ onSuggestion }: { onSuggestion: (s: string) => void }) {
+function EmptyState({ onSuggestion: _ }: { onSuggestion: (s: string) => void }) {
     return (
         <div className="welcome">
             <div className="welcome-machine">
@@ -94,13 +87,6 @@ function EmptyState({ onSuggestion }: { onSuggestion: (s: string) => void }) {
             </div>
             <p className="welcome-title">What do you need to know?</p>
             <p className="welcome-sub">Vulcan OmniPro 220</p>
-            <div className="suggestions">
-                {SUGGESTIONS.map((s) => (
-                    <button key={s} className="suggestion-chip" onClick={() => onSuggestion(s)}>
-                        {s}
-                    </button>
-                ))}
-            </div>
         </div>
     )
 }

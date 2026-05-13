@@ -647,32 +647,19 @@ ol.assistant-list {
   margin-bottom: 28px;
 }
 
-.suggestions {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 7px;
-  justify-content: center;
-  max-width: 480px;
+.suggestion-hint {
+  text-align: center;
+  font-size: 12px;
+  font-family: var(--mono);
+  color: var(--text-dim);
+  opacity: 0;
+  transition: opacity 0.35s ease;
+  margin: 0 0 6px;
+  pointer-events: none;
+  letter-spacing: 0.2px;
 }
-
-.suggestion-chip {
-  padding: 9px 14px;
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: 5px;
-  color: var(--text-muted);
-  font-size: 13px;
-  font-family: 'Geist Variable', sans-serif;
-  cursor: pointer;
-  transition: border-color 0.15s, color 0.15s, background 0.15s;
-  text-align: left;
-  min-height: 40px;
-  letter-spacing: 0.1px;
-}
-.suggestion-chip:hover {
-  border-color: var(--border-bright);
-  color: var(--text);
-  background: var(--surface2);
+.suggestion-hint--visible {
+  opacity: 1;
 }
 
 /* Machine SVG hotspots */

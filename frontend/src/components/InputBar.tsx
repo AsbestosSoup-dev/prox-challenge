@@ -1,8 +1,37 @@
-import { useRef, useState } from "react"
+import { useRef, useState, useEffect } from "react"
 import { Textarea } from "@/components/ui/textarea"
 import { ImageIcon, Mic, Send } from "lucide-react"
 
 const BACKEND_URL = import.meta.env.VITE_BACKEND_URL ?? "http://127.0.0.1:8000"
+
+const HINTS = [
+    "What's the duty cycle at max amperage?",
+    "How do I set up for MIG welding?",
+    "Walk me through flux-cored polarity",
+    "My arc keeps sputtering — what's wrong?",
+]
+
+function SuggestionHint() {
+    const [index, setIndex] = useState(0)
+    const [visible, setVisible] = useState(true)
+
+    useEffect(() => {
+        const cycle = setInterval(() => {
+            setVisible(false)
+            setTimeout(() => {
+                setIndex(i => (i + 1) % HINTS.length)
+                setVisible(true)
+            }, 400)
+        }, 3000)
+        return () => clearInterval(cycle)
+    }, [])
+
+    return (
+        <p className={`suggestion-hint${visible ? " suggestion-hint--visible" : ""}`}>
+            {HINTS[index]}
+        </p>
+    )
+}
 
 interface Props {
     value: string
@@ -136,6 +165,7 @@ export default function InputBar({
 
     return (
         <div className="input-area">
+            <SuggestionHint />
             {pendingImages.length > 0 && (
                 <div className="pending-images">
                     {pendingImages.map((img, i) => (
