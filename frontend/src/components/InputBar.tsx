@@ -11,24 +11,54 @@ const HINTS = [
     "My arc keeps sputtering — what's wrong?",
 ]
 
+const CHAR_INTERVAL = 38   // ms per character typed
+const HOLD_MS = 1800        // pause after fully typed
+const ERASE_INTERVAL = 22  // ms per character erased
+
 function SuggestionHint() {
     const [index, setIndex] = useState(0)
-    const [visible, setVisible] = useState(true)
+    const [displayed, setDisplayed] = useState("")
+    const phaseRef = useRef<"typing" | "holding" | "erasing">("typing")
+    const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
     useEffect(() => {
-        const cycle = setInterval(() => {
-            setVisible(false)
-            setTimeout(() => {
+        let charPos = 0
+        const target = HINTS[index]
+
+        const clear = () => { if (timerRef.current) clearTimeout(timerRef.current) }
+
+        const type = () => {
+            charPos++
+            setDisplayed(target.slice(0, charPos))
+            if (charPos < target.length) {
+                timerRef.current = setTimeout(type, CHAR_INTERVAL)
+            } else {
+                phaseRef.current = "holding"
+                timerRef.current = setTimeout(erase, HOLD_MS)
+            }
+        }
+
+        const erase = () => {
+            charPos--
+            setDisplayed(target.slice(0, charPos))
+            if (charPos > 0) {
+                timerRef.current = setTimeout(erase, ERASE_INTERVAL)
+            } else {
+                phaseRef.current = "typing"
                 setIndex(i => (i + 1) % HINTS.length)
-                setVisible(true)
-            }, 400)
-        }, 3000)
-        return () => clearInterval(cycle)
-    }, [])
+            }
+        }
+
+        charPos = 0
+        phaseRef.current = "typing"
+        timerRef.current = setTimeout(type, CHAR_INTERVAL)
+
+        return clear
+    }, [index])
 
     return (
-        <p className={`suggestion-hint${visible ? " suggestion-hint--visible" : ""}`}>
-            {HINTS[index]}
+        <p className="suggestion-hint">
+            {displayed}<span className="suggestion-hint-cursor" />
         </p>
     )
 }

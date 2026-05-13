@@ -652,14 +652,23 @@ ol.assistant-list {
   font-size: 12px;
   font-family: var(--mono);
   color: var(--text-dim);
-  opacity: 0;
-  transition: opacity 0.35s ease;
   margin: 0 0 6px;
   pointer-events: none;
   letter-spacing: 0.2px;
+  min-height: 1.4em;
 }
-.suggestion-hint--visible {
-  opacity: 1;
+.suggestion-hint-cursor {
+  display: inline-block;
+  width: 1px;
+  height: 0.9em;
+  background: var(--text-dim);
+  margin-left: 1px;
+  vertical-align: text-bottom;
+  animation: blink 0.9s step-end infinite;
+}
+@keyframes blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0; }
 }
 
 /* Machine SVG hotspots */
