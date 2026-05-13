@@ -23,6 +23,7 @@ export default function App() {
     const [messages, setMessages] = useState<(Message & { _raw?: string })[]>([])
     const [input, setInput] = useState("")
     const [isStreaming, setIsStreaming] = useState(false)
+    const [isPending, setIsPending] = useState(false)
     const [pendingImages, setPendingImages] = useState<{ data: string; type: string }[]>([])
     const [chats, setChats] = useState<Chat[]>([])
     const [activeChatId, setActiveChatId] = useState<string | null>(null)
@@ -76,6 +77,7 @@ export default function App() {
         setPendingImages([])
         stop()
         setIsStreaming(true)
+        setIsPending(true)
         rawBufferRef.current = ""
         pendingPagesRef.current = null
 
@@ -91,13 +93,6 @@ export default function App() {
             }
             setChats((prev) => [newChat, ...prev])
         }
-
-        const placeholder: Message & { _raw: string } = {
-            role: "assistant",
-            content: "",
-            _raw: "",
-        }
-        setMessages([...newMessages, placeholder])
 
         try {
             const response = await fetch(`${BACKEND_URL}/chat`, {
@@ -133,8 +128,13 @@ export default function App() {
                             rawBufferRef.current += event.text
                             const raw = rawBufferRef.current
                             const pages = pendingPagesRef.current
+                            setIsPending(false)
                             setMessages((prev) => {
-                                const updated = [...prev]
+                                const last = prev[prev.length - 1]
+                                const placeholder: Message & { _raw: string } = last?.role === "assistant"
+                                    ? { ...last }
+                                    : { role: "assistant", content: "", _raw: "" }
+                                const updated = last?.role === "assistant" ? [...prev] : [...prev, placeholder]
                                 updated[updated.length - 1] = {
                                     ...updated[updated.length - 1],
                                     ...(pages !== null && { source_pages: pages }),
@@ -168,6 +168,7 @@ export default function App() {
                 return updated
             })
             setIsStreaming(false)
+            setIsPending(false)
         }
     }, [input, messages, isStreaming, pendingImages, activeChatId, audioEnabled, speak, stop])
 
@@ -213,6 +214,7 @@ export default function App() {
             <MessageList
                 messages={messages}
                 isStreaming={isStreaming}
+                isPending={isPending}
                 onSuggestion={(s) => setInput(s)}
             />
 

@@ -13,10 +13,11 @@ const SUGGESTIONS = [
 interface Props {
     messages: (Message & { _raw?: string })[]
     isStreaming: boolean
+    isPending: boolean
     onSuggestion: (text: string) => void
 }
 
-export default function MessageList({ messages, isStreaming, onSuggestion }: Props) {
+export default function MessageList({ messages, isStreaming, isPending, onSuggestion }: Props) {
     const bottomRef = useRef<HTMLDivElement>(null)
 
     useEffect(() => {
@@ -53,7 +54,7 @@ export default function MessageList({ messages, isStreaming, onSuggestion }: Pro
                                 isStreaming={isStreaming && i === messages.length - 1}
                             />
                         ))}
-                        {isStreaming && messages[messages.length - 1]?.role !== "assistant" && (
+                        {isPending && (
                             <div className="msg-row msg-assistant">
                                 <div className="proxy-avatar">P</div>
                                 <div className="typing-dots">
