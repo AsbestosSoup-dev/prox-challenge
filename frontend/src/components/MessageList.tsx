@@ -267,10 +267,12 @@ function MachineSVG() {
             <rect x="12" y="300" width={W - 24} height="56" rx="6"
                 fill="#141820" stroke={borderBr} strokeWidth="1.5" />
 
-            {/* Spool Gun Gas Outlet — far left, small circle */}
-            <circle cx="28" cy="326" r="7" fill={surf3} stroke={borderBr} strokeWidth="1" />
-            <circle cx="28" cy="326" r="3.5" fill={bg} />
-            <text x="28" y="343" textAnchor="middle" fill={textDim} fontSize="5.5" fontFamily={mono}>GAS</text>
+            {/* Spool Gun Gas Outlet — same size/style as NEG/POS */}
+            <circle cx="52" cy="322" r="17" fill={surf2} stroke={borderBr} strokeWidth="1.5" />
+            <circle cx="52" cy="322" r="12" fill="#8a6818" stroke="#c09030" strokeWidth="1.5" />
+            <circle cx="52" cy="322" r="5.5" fill="#5a4010" />
+            <text x="52" y="308" textAnchor="middle" fill={textMut} fontSize="7" fontFamily={mono}>⊙</text>
+            <text x="52" y="347" textAnchor="middle" fill={textDim} fontSize="6" fontFamily={mono}>GAS</text>
 
             {/* Negative Socket (−) — dead center of section */}
             <circle cx={cx} cy="322" r="17" fill={surf2} stroke={borderBr} strokeWidth="1.5" />
