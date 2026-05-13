@@ -203,8 +203,8 @@ function MachineSVG() {
                 <line x1="28" y1="8.5" x2="33" y2="12" stroke="#c8922a" strokeWidth="1.5" strokeLinecap="round" />
                 <rect x="0" y="3" width="7" height="11" rx="2" fill="#2a3830" />
             </g>
-            {/* Settings bar at LCD bottom */}
-            <rect x="48" y="128" width={W - 96} height="8" rx="0" fill="#b0c4bc" />
+            {/* Settings bar at LCD bottom — rx="4" to follow LCD bottom corners */}
+            <rect x="48" y="128" width={W - 96} height="8" rx="4" fill="#b0c4bc" />
             {[0,1,2,3,4,5,6,7].map(i => (
                 <rect key={i} x={51 + i * 17} y="130" width="12" height="4"
                     rx="1" fill={i === 3 ? "#6a8878" : "#c8d8d0"} />
@@ -230,13 +230,13 @@ function MachineSVG() {
             <rect x="18" y="242" width="68" height="50" rx="5"
                 fill={bg} stroke={borderBr} strokeWidth="1" />
             {/* socket circle — centered vertically, near right side of hole */}
-            <circle cx="71" cy="267" r="13" fill={surf3} stroke={borderBr} strokeWidth="1.5" />
-            <circle cx="71" cy="267" r="9" fill={bg} stroke={border} strokeWidth="0.75" />
+            <circle cx="64" cy="267" r="13" fill={surf3} stroke={borderBr} strokeWidth="1.5" />
+            <circle cx="64" cy="267" r="9" fill={bg} stroke={border} strokeWidth="0.75" />
             {[0,1,2,3,4].map(i => {
                 const a = (i / 5) * Math.PI * 2 - Math.PI / 2
-                return <circle key={i} cx={71 + 5 * Math.cos(a)} cy={267 + 5 * Math.sin(a)} r="1.5" fill={borderBr} />
+                return <circle key={i} cx={64 + 5 * Math.cos(a)} cy={267 + 5 * Math.sin(a)} r="1.5" fill={borderBr} />
             })}
-            <circle cx="71" cy="267" r="1.5" fill={borderBr} />
+            <circle cx="64" cy="267" r="1.5" fill={borderBr} />
 
             {/* CENTER: Power switch */}
             <rect x="98" y="248" width="30" height="36" rx="3"
