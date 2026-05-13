@@ -11,56 +11,22 @@ const HINTS = [
     "My arc keeps sputtering — what's wrong?",
 ]
 
-const CHAR_INTERVAL = 38   // ms per character typed
-const HOLD_MS = 1800        // pause after fully typed
-const ERASE_INTERVAL = 22  // ms per character erased
-
-function SuggestionHint() {
+function useCyclingPlaceholder(items: string[], interval = 3000, fadeDuration = 400) {
     const [index, setIndex] = useState(0)
-    const [displayed, setDisplayed] = useState("")
-    const phaseRef = useRef<"typing" | "holding" | "erasing">("typing")
-    const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+    const [visible, setVisible] = useState(true)
 
     useEffect(() => {
-        let charPos = 0
-        const target = HINTS[index]
+        const t = setInterval(() => {
+            setVisible(false)
+            setTimeout(() => {
+                setIndex(i => (i + 1) % items.length)
+                setVisible(true)
+            }, fadeDuration)
+        }, interval)
+        return () => clearInterval(t)
+    }, [items.length, interval, fadeDuration])
 
-        const clear = () => { if (timerRef.current) clearTimeout(timerRef.current) }
-
-        const type = () => {
-            charPos++
-            setDisplayed(target.slice(0, charPos))
-            if (charPos < target.length) {
-                timerRef.current = setTimeout(type, CHAR_INTERVAL)
-            } else {
-                phaseRef.current = "holding"
-                timerRef.current = setTimeout(erase, HOLD_MS)
-            }
-        }
-
-        const erase = () => {
-            charPos--
-            setDisplayed(target.slice(0, charPos))
-            if (charPos > 0) {
-                timerRef.current = setTimeout(erase, ERASE_INTERVAL)
-            } else {
-                phaseRef.current = "typing"
-                setIndex(i => (i + 1) % HINTS.length)
-            }
-        }
-
-        charPos = 0
-        phaseRef.current = "typing"
-        timerRef.current = setTimeout(type, CHAR_INTERVAL)
-
-        return clear
-    }, [index])
-
-    return (
-        <p className="suggestion-hint">
-            {displayed}<span className="suggestion-hint-cursor" />
-        </p>
-    )
+    return { text: items[index], visible }
 }
 
 interface Props {
@@ -71,6 +37,7 @@ interface Props {
     pendingImages: { data: string; type: string }[]
     onImagesAdd: (images: { data: string; type: string }[]) => void
     onImageRemove: (index: number) => void
+    hasMessages?: boolean
 }
 
 function readFilesAsBase64(files: File[]): Promise<{ data: string; type: string }[]> {
@@ -96,7 +63,10 @@ export default function InputBar({
     pendingImages,
     onImagesAdd,
     onImageRemove,
+    hasMessages = false,
 }: Props) {
+    const { text: hintText, visible: hintVisible } = useCyclingPlaceholder(HINTS)
+    const [isFocused, setIsFocused] = useState(false)
     const fileInputRef = useRef<HTMLInputElement>(null)
     const [isRecording, setIsRecording] = useState(false)
     const [isTranscribing, setIsTranscribing] = useState(false)
@@ -195,7 +165,6 @@ export default function InputBar({
 
     return (
         <div className="input-area">
-            <SuggestionHint />
             {pendingImages.length > 0 && (
                 <div className="pending-images">
                     {pendingImages.map((img, i) => (
@@ -220,16 +189,38 @@ export default function InputBar({
                     style={{ display: "none" }}
                 />
 
-                <Textarea
-                    value={value}
-                    onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => onChange(e.target.value)}
-                    onKeyDown={handleKeyDown}
-                    onPaste={handlePaste}
-                    placeholder={isRecording ? "Recording…" : isTranscribing ? "Transcribing…" : "Ask about OmniPro 220…"}
-                    className="chat-textarea"
-                    rows={1}
-                    disabled={isStreaming}
-                />
+                <div className="chat-textarea-wrap">
+                    {!value && !isFocused && !isRecording && !isTranscribing && !hasMessages && (
+                        <span
+                            className={`chat-hint${hintVisible ? " chat-hint--visible" : ""}`}
+                            aria-hidden
+                        >
+                            {hintText}
+                        </span>
+                    )}
+                    {!value && !isFocused && !isRecording && !isTranscribing && hasMessages && (
+                        <span className="chat-hint chat-hint--visible" aria-hidden>
+                            Ask about OmniPro 220…
+                        </span>
+                    )}
+                    {(isRecording || isTranscribing) && (
+                        <span className="chat-hint chat-hint--visible" aria-hidden>
+                            {isRecording ? "Recording…" : "Transcribing…"}
+                        </span>
+                    )}
+                    <Textarea
+                        value={value}
+                        onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => onChange(e.target.value)}
+                        onKeyDown={handleKeyDown}
+                        onPaste={handlePaste}
+                        onFocus={() => setIsFocused(true)}
+                        onBlur={() => setIsFocused(false)}
+                        placeholder=""
+                        className="chat-textarea"
+                        rows={1}
+                        disabled={isStreaming}
+                    />
+                </div>
 
                 <div title={isRecording ? "Tap to stop" : "Tap to record"}>
                     <button

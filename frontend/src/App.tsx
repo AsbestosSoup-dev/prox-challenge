@@ -163,6 +163,7 @@ export default function App() {
                     pendingImages={pendingImages}
                     onImagesAdd={(imgs) => setPendingImages((prev) => [...prev, ...imgs])}
                     onImageRemove={(i) => setPendingImages((prev) => prev.filter((_, j) => j !== i))}
+                    hasMessages={messages.length > 0}
                 />
             </div>
         </div>
