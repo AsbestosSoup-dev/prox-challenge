@@ -15,16 +15,27 @@ const LIGHT_VARS = `
 `
 
 function themeStyle(isDark: boolean) {
+    const bg = isDark ? "#0a0c0e" : "#f5f6f8"
+    const text = isDark ? "#e8eaf0" : "#0d0f12"
+    // In light mode, override the dark Tailwind bg utilities Claude commonly generates
+    const lightOverrides = !isDark ? `
+      .bg-gray-900, .bg-slate-900, .bg-zinc-900, .bg-neutral-900, .bg-stone-900,
+      .bg-gray-800, .bg-slate-800, .bg-zinc-800, .bg-neutral-800, .bg-stone-800,
+      .bg-gray-950, .bg-slate-950, .bg-zinc-950, .bg-neutral-950 {
+        background-color: var(--surface2) !important;
+        color: var(--text) !important;
+      }` : ""
     return `
     <style>
       :root { ${isDark ? DARK_VARS : LIGHT_VARS} }
-      body {
+      html, body {
         margin: 0; padding: 16px;
-        background: var(--bg);
-        color: var(--text);
+        background-color: ${bg} !important;
+        color: ${text};
         font-family: system-ui, sans-serif;
       }
       * { box-sizing: border-box; }
+      ${lightOverrides}
     </style>`
 }
 

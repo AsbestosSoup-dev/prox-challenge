@@ -1,8 +1,57 @@
-import { useEffect, useRef } from "react"
+import { useEffect, useRef, useState } from "react"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import MessageBubble from "./MessageBubble"
 import type { Message } from "../types"
 import { useIsDark } from "../lib/ThemeContext"
+
+const PENDING_MESSAGES = [
+    "Searching manual…",
+    "Reading diagrams…",
+    "Cross-referencing specs…",
+    "Generating response…",
+]
+
+function WeldingPending() {
+    const [msgIdx, setMsgIdx] = useState(0)
+    const [visible, setVisible] = useState(true)
+
+    useEffect(() => {
+        const t = setInterval(() => {
+            setVisible(false)
+            setTimeout(() => {
+                setMsgIdx(i => (i + 1) % PENDING_MESSAGES.length)
+                setVisible(true)
+            }, 300)
+        }, 2200)
+        return () => clearInterval(t)
+    }, [])
+
+    return (
+        <div className="welding-pending">
+            <svg className="welding-arc" viewBox="0 0 64 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+                {/* Electrode */}
+                <rect x="10" y="2" width="4" height="16" rx="1.5" fill="var(--text-dim)" />
+                {/* Workpiece */}
+                <rect x="4" y="24" width="56" height="5" rx="2" fill="var(--surface3)" stroke="var(--border-bright)" strokeWidth="0.75" />
+                {/* Arc column */}
+                <line x1="12" y1="18" x2="12" y2="24" stroke="var(--accent)" strokeWidth="1.5" strokeLinecap="round" className="arc-column" />
+                {/* Core glow */}
+                <ellipse cx="12" cy="23" rx="3" ry="2" fill="var(--accent)" className="arc-core" />
+                {/* Spark particles */}
+                <circle cx="18" cy="20" r="1.2" fill="#f5c542" className="spark spark-1" />
+                <circle cx="7"  cy="19" r="1"   fill="#f5a020" className="spark spark-2" />
+                <circle cx="21" cy="23" r="0.9" fill="var(--accent)" className="spark spark-3" />
+                <circle cx="5"  cy="22" r="1"   fill="#f5c542" className="spark spark-4" />
+                <circle cx="15" cy="17" r="0.8" fill="#fff8e0" className="spark spark-5" />
+                {/* Weld bead forming on workpiece */}
+                <ellipse cx="12" cy="24" rx="6" ry="1.5" fill="var(--accent)" opacity="0.35" className="bead-glow" />
+            </svg>
+            <span className={`welding-pending-msg${visible ? " welding-pending-msg--visible" : ""}`}>
+                {PENDING_MESSAGES[msgIdx]}
+            </span>
+        </div>
+    )
+}
 
 const PROCESSES = [
     { id: "MIG",       label: "MIG",        query: "I want to set up for MIG welding. What do I need to know?" },
@@ -84,11 +133,7 @@ export default function MessageList({ messages, isStreaming, isPending, onSugges
                                 </div>
                             )
                         })}
-                        {isPending && (
-                            <div className="typing-dots">
-                                <span /><span /><span />
-                            </div>
-                        )}
+                        {isPending && <WeldingPending />}
                     </>
                 )}
                 <div ref={bottomRef} />

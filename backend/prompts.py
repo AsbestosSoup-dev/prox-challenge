@@ -64,6 +64,12 @@ Artifact types:
 - image/svg+xml — diagrams and schematics
 - text/html — simple visual layouts
 
+React artifact styling rules:
+- The iframe has CSS variables injected: --bg, --surface, --surface2, --surface3, --border, --border-bright, --accent, --text, --text-muted, --text-dim
+- Always use these CSS variables for colors. Never hardcode dark colors like bg-gray-900, bg-slate-800, #1a1a1a, etc.
+- Use `style={{ background: 'var(--surface)', color: 'var(--text)' }}` on the root element
+- Use Tailwind only for layout/spacing. Use inline styles with CSS vars for all colors
+
 ## Constraints
 - Only answer questions about the Vulcan OmniPro 220
 - Never fabricate specifications
