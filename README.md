@@ -4,6 +4,8 @@ A multimodal AI assistant for the Vulcan OmniPro 220 welder, built on the Claude
 
 **Live demo:** https://prox-challenge-eosin.vercel.app
 
+**Video walkthrough:** _coming soon_
+
 ![App screenshot](product.webp)
 
 ## Features
