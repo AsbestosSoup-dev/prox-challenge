@@ -1,4 +1,3 @@
-import { useEffect, useRef } from "react"
 import type { Artifact } from "../types"
 import { useIsDark } from "../lib/ThemeContext"
 
@@ -102,12 +101,6 @@ interface Props {
 
 export default function ArtifactRenderer({ artifact }: Props) {
     const isDark = useIsDark()
-    const iframeRef = useRef<HTMLIFrameElement>(null)
-
-    // post theme updates to already-loaded iframe
-    useEffect(() => {
-        iframeRef.current?.contentWindow?.postMessage({ type: "theme", isDark }, "*")
-    }, [isDark])
 
     return (
         <div className="artifact-card">
@@ -118,7 +111,7 @@ export default function ArtifactRenderer({ artifact }: Props) {
                 <span className="artifact-title">{artifact.title}</span>
             </div>
             <iframe
-                ref={iframeRef}
+                key={isDark ? "dark" : "light"}
                 srcDoc={buildSrcDoc(artifact, isDark)}
                 sandbox="allow-scripts"
                 title={artifact.title}
