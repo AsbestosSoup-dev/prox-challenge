@@ -1,5 +1,5 @@
 @import "@fontsource-variable/geist";
-@import "@fontsource/geist-mono/400.css";
+@import "@fontsource/jetbrains-mono/400.css";
 @import "tailwindcss";
 
 /* ─── Reset ─────────────────────────────────────────────────────────────────── */
@@ -30,7 +30,7 @@ body {
   --accent-text:   #0a0c0e;
   --red:           #c84040;
   --green:         #3a9060;
-  --mono:          'Geist Mono', 'GeistMono', ui-monospace, monospace;
+  --mono:          'JetBrains Mono', 'JetBrainsMono', ui-monospace, monospace;
 }
 
 .dark {
