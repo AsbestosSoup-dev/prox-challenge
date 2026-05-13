@@ -89,11 +89,12 @@ export default function InputBar({
     }
 
     const stopRecording = () => {
+        // Clear visual state immediately
+        setIsRecording(false)
         const elapsed = Date.now() - recordingStartRef.current
         const doStop = () => {
             mediaRecorderRef.current?.stop()
             mediaRecorderRef.current = null
-            setIsRecording(false)
         }
         // ensure at least 300ms of audio so the blob isn't empty
         const remaining = 300 - elapsed
@@ -101,13 +102,10 @@ export default function InputBar({
         else doStop()
     }
 
-    const handleMicPointerDown = (e: React.PointerEvent) => {
-        e.preventDefault()
-        if (!isTranscribing) startRecording()
-    }
-
-    const handleMicPointerUp = () => {
+    const handleMicClick = () => {
+        if (isTranscribing) return
         if (isRecording) stopRecording()
+        else startRecording()
     }
 
     const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -167,18 +165,16 @@ export default function InputBar({
                     onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => onChange(e.target.value)}
                     onKeyDown={handleKeyDown}
                     onPaste={handlePaste}
-                    placeholder={isRecording ? "Recording…" : isTranscribing ? "Transcribing…" : "Ask Proxy about OmniPro 220..."}
+                    placeholder={isRecording ? "Recording…" : isTranscribing ? "Transcribing…" : "Ask about OmniPro 220…"}
                     className="chat-textarea"
                     rows={1}
                     disabled={isStreaming}
                 />
 
-                <div title={isRecording ? "Release to capture" : "Hold to record"}>
+                <div title={isRecording ? "Tap to stop" : "Tap to record"}>
                     <button
-                        className={`icon-btn${isRecording ? " icon-btn--active" : ""}`}
-                        onPointerDown={handleMicPointerDown}
-                        onPointerUp={handleMicPointerUp}
-                        onPointerLeave={handleMicPointerUp}
+                        className={`icon-btn${isRecording ? " icon-btn--active" : ""}${isTranscribing ? " icon-btn--busy" : ""}`}
+                        onClick={handleMicClick}
                         disabled={isTranscribing}
                     >
                         <Mic size={20} />

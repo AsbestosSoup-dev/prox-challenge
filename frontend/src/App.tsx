@@ -2,20 +2,12 @@ import {useCallback, useRef, useState} from "react"
 import {Moon, Sun, Volume2, VolumeX} from "lucide-react"
 import MessageList from "./components/MessageList"
 import InputBar from "./components/InputBar"
-import ChatHistory from "./components/ChatHistory"
-import type {Chat, Message} from "./types"
+import type {Message} from "./types"
 import proxLogo from "./assets/prox.svg?url"
 import {useTTS} from "./lib/useTTS"
 
 const BACKEND_URL = import.meta.env.VITE_BACKEND_URL ?? "http://127.0.0.1:8000"
 
-function generateId(): string {
-    return Math.random().toString(36).slice(2)
-}
-
-function generateChatTitle(firstMessage: string): string {
-    return firstMessage.length > 40 ? firstMessage.slice(0, 40) + "…" : firstMessage
-}
 
 export default function App() {
     const [isDark, setIsDark] = useState(true)
@@ -25,38 +17,9 @@ export default function App() {
     const [isStreaming, setIsStreaming] = useState(false)
     const [isPending, setIsPending] = useState(false)
     const [pendingImages, setPendingImages] = useState<{ data: string; type: string }[]>([])
-    const [chats, setChats] = useState<Chat[]>([])
-    const [activeChatId, setActiveChatId] = useState<string | null>(null)
     const rawBufferRef = useRef("")
     const pendingPagesRef = useRef<any[] | null>(null)
     const { speak, stop } = useTTS()
-
-    const startNewChat = useCallback(() => {
-        if (messages.length > 0 && activeChatId) {
-            setChats((prev) =>
-                prev.map((c) => (c.id === activeChatId ? {...c, messages} : c))
-            )
-        }
-        setMessages([])
-        setInput("")
-        setPendingImages([])
-        setActiveChatId(null)
-    }, [messages, activeChatId])
-
-    const selectChat = useCallback((chat: Chat) => {
-        setMessages(chat.messages)
-        setActiveChatId(chat.id)
-        setInput("")
-        setPendingImages([])
-    }, [])
-
-    const deleteChat = useCallback((id: string) => {
-        setChats((prev) => prev.filter((c) => c.id !== id))
-        if (activeChatId === id) {
-            setMessages([])
-            setActiveChatId(null)
-        }
-    }, [activeChatId])
 
     const sendMessage = useCallback(async () => {
         const text = input.trim()
@@ -80,19 +43,6 @@ export default function App() {
         setIsPending(true)
         rawBufferRef.current = ""
         pendingPagesRef.current = null
-
-        let chatId = activeChatId
-        if (!chatId) {
-            chatId = generateId()
-            setActiveChatId(chatId)
-            const newChat: Chat = {
-                id: chatId,
-                title: generateChatTitle(text),
-                messages: [],
-                createdAt: new Date(),
-            }
-            setChats((prev) => [newChat, ...prev])
-        }
 
         try {
             const response = await fetch(`${BACKEND_URL}/chat`, {
@@ -170,30 +120,16 @@ export default function App() {
             setIsStreaming(false)
             setIsPending(false)
         }
-    }, [input, messages, isStreaming, pendingImages, activeChatId, audioEnabled, speak, stop])
+    }, [input, messages, isStreaming, pendingImages, audioEnabled, speak, stop])
 
     return (
         <div className={`app ${isDark ? "dark" : "light"}`}>
             <div className="header-outer">
-
-
                 <header className="header">
                     <div className="header-left">
-                        <ChatHistory
-                            chats={chats}
-                            activeChatId={activeChatId}
-                            onSelectChat={selectChat}
-                            onNewChat={startNewChat}
-                            onDeleteChat={deleteChat}
-                        />
                         <img src={proxLogo} alt="Prox" className="prox-logo"/>
                         <span className="header-model">OmniPro 220</span>
                     </div>
-
-                    <div className="header-center">
-                        <span className="header-title">Ask Proxy</span>
-                    </div>
-
                     <div className="header-right">
                         <button
                             className={`icon-btn${audioEnabled ? " icon-btn--active" : ""}`}
@@ -219,15 +155,15 @@ export default function App() {
             />
 
             <div className="input-outer">
-            <InputBar
-                value={input}
-                onChange={setInput}
-                onSend={sendMessage}
-                isStreaming={isStreaming}
-                pendingImages={pendingImages}
-                onImagesAdd={(imgs) => setPendingImages((prev) => [...prev, ...imgs])}
-                onImageRemove={(i) => setPendingImages((prev) => prev.filter((_, j) => j !== i))}
-            />
+                <InputBar
+                    value={input}
+                    onChange={setInput}
+                    onSend={sendMessage}
+                    isStreaming={isStreaming}
+                    pendingImages={pendingImages}
+                    onImagesAdd={(imgs) => setPendingImages((prev) => [...prev, ...imgs])}
+                    onImageRemove={(i) => setPendingImages((prev) => prev.filter((_, j) => j !== i))}
+                />
             </div>
         </div>
     )

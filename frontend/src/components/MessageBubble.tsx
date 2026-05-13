@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react"
-import { parseArtifacts } from "../lib/ParseArtifacts"
+import { parseArtifactsSplit } from "../lib/ParseArtifacts"
 import ArtifactRenderer from "./ArtifactRenderer"
+import Lightbox from "./Lightbox"
 import type { Message, SourcePage } from "../types"
 
 interface Props {
@@ -18,53 +19,155 @@ function isArtifactInProgress(raw: string): boolean {
     return raw.includes("<antartifact") && !raw.includes("</antartifact>")
 }
 
-function ArtifactLoadingWidget() {
-    const [seconds, setSeconds] = useState(0)
+function getArtifactMeta(raw: string): { title: string; type: string } {
+    const tag = raw.slice(raw.indexOf("<antartifact"))
+    const title = tag.match(/title="([^"]+)"/)?.[1] ?? ""
+    const type = tag.match(/type="([^"]+)"/)?.[1] ?? ""
+    return { title, type }
+}
+
+function artifactLabel(type: string, title: string): string {
+    if (title) return title
+    if (type.includes("react")) return "Interactive component"
+    if (type.includes("svg")) return "Diagram"
+    if (type.includes("html")) return "Visual layout"
+    return "Artifact"
+}
+
+const ESTIMATED_SECONDS = 20
+const COMPLETE_MS = 500
+
+function ArtifactLoadingWidget({ raw, completing }: { raw: string; completing: boolean }) {
+    const [elapsed, setElapsed] = useState(0)
     const startRef = useRef(Date.now())
+    const beadRef = useRef<HTMLDivElement>(null)
+    const headRef = useRef<HTMLDivElement>(null)
+    const [frozenPct, setFrozenPct] = useState<number | null>(null)
+    const { title, type } = getArtifactMeta(raw)
+    const label = artifactLabel(type, title)
 
     useEffect(() => {
         const interval = setInterval(() => {
-            setSeconds(Math.floor((Date.now() - startRef.current) / 1000))
+            setElapsed(Math.floor((Date.now() - startRef.current) / 1000))
         }, 1000)
         return () => clearInterval(interval)
     }, [])
 
+    // Step 1: when completing starts, freeze bead at current rendered width
+    // Step 2: next frame, set width to 100% — CSS transition does the rest
+    const [completingTo100, setCompletingTo100] = useState(false)
+
+    useEffect(() => {
+        if (!completing) return
+        if (!beadRef.current) return
+        const trackWidth = beadRef.current.parentElement!.offsetWidth
+        const beadWidth = beadRef.current.getBoundingClientRect().width
+        const pct = trackWidth > 0 ? (beadWidth / trackWidth) * 100 : 0
+        setFrozenPct(pct)
+        // next frame: trigger transition to 100%
+        requestAnimationFrame(() => {
+            requestAnimationFrame(() => setCompletingTo100(true))
+        })
+    }, [completing])
+
+    const normalDur = `${ESTIMATED_SECONDS}s`
+
     return (
         <div className="artifact-loading">
-            <span className="artifact-loading-dots">
-                <span /><span /><span />
-            </span>
-            <span className="artifact-loading-label">
-                Loading artifact{seconds > 0 ? ` — ${seconds}s` : "…"}
-            </span>
+            <div className="artifact-loading-header">
+                <span className="artifact-loading-dots">
+                    <span /><span /><span />
+                </span>
+                <span className="artifact-loading-label">
+                    {completing ? "Done" : `Building ${label}${elapsed > 0 ? ` — ${elapsed}s` : "…"}`}
+                </span>
+            </div>
+            <div className="artifact-weld-track">
+                <div
+                    ref={beadRef}
+                    className="artifact-weld-bead"
+                    style={completing && frozenPct !== null
+                        ? {
+                            animation: "none",
+                            width: completingTo100 ? "100%" : `${frozenPct}%`,
+                            transition: completingTo100 ? `width ${COMPLETE_MS}ms ease-in` : "none",
+                          }
+                        : { animationDuration: normalDur }
+                    }
+                />
+                <div
+                    ref={headRef}
+                    className="artifact-weld-head"
+                    style={completing && frozenPct !== null
+                        ? {
+                            animation: "none",
+                            left: completingTo100 ? "100%" : `${frozenPct}%`,
+                            transition: completingTo100 ? `left ${COMPLETE_MS}ms ease-in` : "none",
+                          }
+                        : { animationDuration: normalDur }
+                    }
+                >
+                    <div className="artifact-weld-spark-core" />
+                    {[0,1,2,3,4,5].map(i => (
+                        <div key={i} className={`artifact-weld-particle artifact-weld-particle--${i}`} />
+                    ))}
+                </div>
+            </div>
         </div>
     )
 }
 
 export default function MessageBubble({ message, isStreaming }: Props) {
+    const [showCompleting, setShowCompleting] = useState(false)
+    const [showArtifact, setShowArtifact] = useState(false)
+    const [lightbox, setLightbox] = useState<{ src: string; alt: string } | null>(null)
+    const wasLoadingRef = useRef(false)
+
+    const raw = message._raw ?? message.content
+    const hadArtifact = isArtifactInProgress(raw) || raw.includes("</antartifact>")
+
+    useEffect(() => {
+        if (isStreaming && hadArtifact) {
+            wasLoadingRef.current = true
+        }
+        if (!isStreaming && wasLoadingRef.current) {
+            wasLoadingRef.current = false
+            setShowCompleting(true)
+            setTimeout(() => {
+                setShowCompleting(false)
+                setShowArtifact(true)
+            }, COMPLETE_MS + 100)
+        }
+    }, [isStreaming, hadArtifact])
+
     if (message.role === "user") {
         return (
             <div className="msg-row msg-user">
                 <div className="bubble bubble-user">
-                    {message.image_data?.map((img, i) => (
-                        <img
-                            key={i}
-                            src={`data:${message.image_type?.[i] ?? "image/jpeg"};base64,${img}`}
-                            alt="uploaded"
-                            className="uploaded-image"
-                        />
-                    ))}
+                    {message.image_data?.map((img, i) => {
+                        const src = `data:${message.image_type?.[i] ?? "image/jpeg"};base64,${img}`
+                        return (
+                            <img
+                                key={i}
+                                src={src}
+                                alt="uploaded"
+                                className="uploaded-image"
+                                onClick={() => setLightbox({ src, alt: "uploaded image" })}
+                                style={{ cursor: "zoom-in" }}
+                            />
+                        )
+                    })}
                     <span>{message.content}</span>
                 </div>
+                {lightbox && <Lightbox src={lightbox.src} alt={lightbox.alt} onClose={() => setLightbox(null)} />}
             </div>
         )
     }
 
-    const raw = message._raw ?? message.content
     const artifactInProgress = isStreaming && isArtifactInProgress(raw)
 
-    // While artifact is streaming, show only text before the tag + loading widget
-    if (artifactInProgress) {
+    // Show loading widget while streaming or briefly completing
+    if (artifactInProgress || showCompleting) {
         const textBefore = getTextBeforeArtifact(raw)
         return (
             <div className="msg-row msg-assistant">
@@ -75,27 +178,35 @@ export default function MessageBubble({ message, isStreaming }: Props) {
                             <AssistantText text={textBefore} />
                         </div>
                     )}
-                    <ArtifactLoadingWidget />
+                    <ArtifactLoadingWidget raw={raw} completing={showCompleting} />
+                    {/* post-artifact text is intentionally hidden until artifact renders */}
                 </div>
             </div>
         )
     }
 
-    const { text, artifacts } = parseArtifacts(raw)
+    const { before, artifacts, after } = parseArtifactsSplit(raw)
+    // For history messages (not currently streaming), always show everything immediately
+    const canShowArtifacts = showArtifact || !isStreaming
 
     return (
         <div className="msg-row msg-assistant">
             <div className="proxy-avatar">P</div>
             <div className="assistant-body">
-                {text && (
+                {before && (
                     <div className="bubble bubble-assistant">
-                        <AssistantText text={text} />
+                        <AssistantText text={before} />
                     </div>
                 )}
-                {artifacts.map((artifact) => (
+                {canShowArtifacts && artifacts.map((artifact) => (
                     <ArtifactRenderer key={artifact.identifier} artifact={artifact} />
                 ))}
-                {message.source_pages && message.source_pages.length > 0 && (
+                {canShowArtifacts && after && (
+                    <div className="bubble bubble-assistant">
+                        <AssistantText text={after} />
+                    </div>
+                )}
+                {canShowArtifacts && message.source_pages && message.source_pages.length > 0 && (
                     <SourcePages pages={message.source_pages} />
                 )}
             </div>
@@ -105,21 +216,35 @@ export default function MessageBubble({ message, isStreaming }: Props) {
 
 function SourcePages({ pages }: { pages: SourcePage[] }) {
     const [open, setOpen] = useState(false)
+    const [visible, setVisible] = useState(false)
+    const [lightbox, setLightbox] = useState<{ src: string; alt: string } | null>(null)
+
+    const toggle = () => {
+        if (!open) {
+            setOpen(true)
+            requestAnimationFrame(() => requestAnimationFrame(() => setVisible(true)))
+        } else {
+            setVisible(false)
+            setTimeout(() => setOpen(false), 280)
+        }
+    }
+
     return (
         <div className="source-pages">
-            <button className="source-pages-toggle" onClick={() => setOpen(o => !o)}>
+            <button className="source-pages-toggle" onClick={toggle}>
                 {open ? "▲" : "▼"} {pages.length} source page{pages.length !== 1 ? "s" : ""}
             </button>
             {open && (
-                <div className="source-pages-grid">
+                <div className={`source-pages-grid${visible ? " source-pages-grid--visible" : ""}`}>
                     {pages.map((p, i) => (
-                        <div key={i} className="source-page-thumb">
+                        <div key={i} className="source-page-thumb" onClick={() => setLightbox({ src: `data:image/png;base64,${p.base64}`, alt: `${p.source} p.${p.page}` })}>
                             <img src={`data:image/png;base64,${p.base64}`} alt={`${p.source} p.${p.page}`} />
                             <span className="source-page-label">{p.source} p.{p.page}</span>
                         </div>
                     ))}
                 </div>
             )}
+            {lightbox && <Lightbox src={lightbox.src} alt={lightbox.alt} onClose={() => setLightbox(null)} />}
         </div>
     )
 }
