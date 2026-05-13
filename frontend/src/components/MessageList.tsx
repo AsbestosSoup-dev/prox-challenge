@@ -119,7 +119,7 @@ function EmptyState({ onSuggestion }: { onSuggestion: (s: string) => void }) {
 //      Negative Socket, Wire Feed Power Cable, Positive Socket
 function MachineSVG() {
     const W = 260
-    const H = 420
+    const H = 370
     const cx = W / 2
 
     // Colors via CSS vars — SVG uses currentColor fallback
@@ -159,13 +159,8 @@ function MachineSVG() {
             aria-hidden="true"
         >
             {/* ── 1. Outer body ───────────────────────────────────────── */}
-            <rect x="12" y="30" width={W - 24} height={H - 44} rx="12"
+            <rect x="12" y="10" width={W - 24} height={H - 14} rx="12"
                 fill={surf} stroke={border} strokeWidth="1.5" />
-
-            {/* ── Carry handle ────────────────────────────────────────── */}
-            <rect x="74" y="18" width="8" height="20" rx="4" fill={surf2} stroke={border} strokeWidth="1" />
-            <rect x={W - 82} y="18" width="8" height="20" rx="4" fill={surf2} stroke={border} strokeWidth="1" />
-            <rect x="74" y="10" width={W - 148} height="13" rx="6" fill={surf3} stroke={borderBr} strokeWidth="1" />
 
             {/* ── 2. Top control panel ─────────────────────────────────── */}
             <rect x="16" y="34" width={W - 32} height="170" rx="6"
@@ -255,28 +250,28 @@ function MachineSVG() {
             ))}
 
             {/* ── 5. Bottom connector base ─────────────────────────────── */}
-            <rect x="12" y="300" width={W - 24} height="56" rx="6"
+            <rect x="12" y="300" width={W - 24} height="48" rx="6"
                 fill="#141820" stroke={borderBr} strokeWidth="1.5" />
 
             {/* Spool Gun Gas Outlet */}
-            <circle cx="52" cy="328" r="17" fill={surf2} stroke={borderBr} strokeWidth="1.5" />
-            <circle cx="52" cy="328" r="12" fill="#8a6818" stroke="#c09030" strokeWidth="1.5" />
-            <circle cx="52" cy="328" r="5.5" fill="#5a4010" />
+            <circle cx="52" cy="324" r="17" fill={surf2} stroke={borderBr} strokeWidth="1.5" />
+            <circle cx="52" cy="324" r="12" fill="#8a6818" stroke="#c09030" strokeWidth="1.5" />
+            <circle cx="52" cy="324" r="5.5" fill="#5a4010" />
 
             {/* Negative Socket (−) — center */}
-            <circle cx="130" cy="328" r="17" fill={surf2} stroke={borderBr} strokeWidth="1.5" />
-            <circle cx="130" cy="328" r="12" fill="#8a6818" stroke="#c09030" strokeWidth="1.5" />
-            <circle cx="130" cy="328" r="5.5" fill="#5a4010" />
+            <circle cx="130" cy="324" r="17" fill={surf2} stroke={borderBr} strokeWidth="1.5" />
+            <circle cx="130" cy="324" r="12" fill="#8a6818" stroke="#c09030" strokeWidth="1.5" />
+            <circle cx="130" cy="324" r="5.5" fill="#5a4010" />
 
             {/* Wire Feed Power Cable — smaller, midpoint between NEG(130) and POS(208) = 169, slightly lower */}
-            <circle cx="169" cy="338" r="10" fill={surf2} stroke={borderBr} strokeWidth="1.25" />
-            <circle cx="169" cy="338" r="6.5" fill="#8a6818" stroke="#c09030" strokeWidth="1" />
-            <circle cx="169" cy="338" r="3" fill="#5a4010" />
+            <circle cx="169" cy="332" r="10" fill={surf2} stroke={borderBr} strokeWidth="1.25" />
+            <circle cx="169" cy="332" r="6.5" fill="#8a6818" stroke="#c09030" strokeWidth="1" />
+            <circle cx="169" cy="332" r="3" fill="#5a4010" />
 
             {/* Positive Socket (+) */}
-            <circle cx="208" cy="328" r="17" fill={surf2} stroke={borderBr} strokeWidth="1.5" />
-            <circle cx="208" cy="328" r="12" fill="#8a6818" stroke="#c09030" strokeWidth="1.5" />
-            <circle cx="208" cy="328" r="5.5" fill="#5a4010" />
+            <circle cx="208" cy="324" r="17" fill={surf2} stroke={borderBr} strokeWidth="1.5" />
+            <circle cx="208" cy="324" r="12" fill="#8a6818" stroke="#c09030" strokeWidth="1.5" />
+            <circle cx="208" cy="324" r="5.5" fill="#5a4010" />
         </svg>
     )
 }
