@@ -3,6 +3,12 @@ set -e
 
 ROOT="$(cd "$(dirname "$0")" && pwd)"
 
+# Check .env
+if [ ! -f "$ROOT/.env" ]; then
+    echo "Error: .env file not found. Run: cp .env.example .env  and add your ANTHROPIC_API_KEY"
+    exit 1
+fi
+
 # Check prerequisites
 MISSING=0
 if ! command -v python3 &>/dev/null; then
