@@ -178,6 +178,7 @@ function MachineSVG({ lcdProcess }: { lcdProcess?: string | null }) {
     const torchNeck  = isDark ? "#2a3830" : "#1a2820"
     const switchOn   = isDark ? "#182018" : "#0e160e"
     const connBase   = isDark ? "#141820" : "#1a1e2a"
+    const panel      = isDark ? "#1a1e24" : surf2
 
     // knob helper — outer ring → body → inner cap → downward orange triangle indicator
     const Knob = ({ cx: kx, cy: ky, r = 20, label }: { cx: number; cy: number; r?: number; label: string }) => (
@@ -207,10 +208,10 @@ function MachineSVG({ lcdProcess }: { lcdProcess?: string | null }) {
 
             {/* ── 2. Top control panel ─────────────────────────────────── */}
             <rect x="16" y="34" width={W - 32} height="170" rx="6"
-                fill="#1a1e24" stroke={border} strokeWidth="1" />
+                fill={panel} stroke={border} strokeWidth="1" />
 
             {/* VULCAN logo top-left of panel */}
-            <text x="26" y="52" fill="white" fontSize="9" fontFamily={mono} fontWeight="800" letterSpacing="1">VULCAN</text>
+            <text x="26" y="52" fill={isDark ? "white" : textMut} fontSize="9" fontFamily={mono} fontWeight="800" letterSpacing="1">VULCAN</text>
             {/* Warning / indicator icons beside logo */}
             <text x="26" y="63" fill={textDim} fontSize="7" fontFamily={mono}>⚠  ▮▮</text>
 
