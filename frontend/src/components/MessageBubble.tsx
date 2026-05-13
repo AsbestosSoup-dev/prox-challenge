@@ -142,7 +142,7 @@ function renderInline(text: string) {
         if (part.startsWith("**") && part.endsWith("**"))
             return <strong key={i}>{part.slice(2, -2)}</strong>
         if (part.startsWith("[") && part.endsWith("]"))
-            return <span key={i} className="citation">{part}</span>
+            return <span key={i} className="citation">{part.slice(1, -1)}</span>
         return part
     })
 }
