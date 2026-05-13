@@ -3,6 +3,18 @@ set -e
 
 ROOT="$(cd "$(dirname "$0")" && pwd)"
 
+# Check prerequisites
+MISSING=0
+if ! command -v python3 &>/dev/null; then
+    echo "Error: python3 is not installed. Download it from https://www.python.org/downloads/"
+    MISSING=1
+fi
+if ! command -v bun &>/dev/null; then
+    echo "Error: bun is not installed. Install it with: curl -fsSL https://bun.sh/install | bash"
+    MISSING=1
+fi
+if [ $MISSING -eq 1 ]; then exit 1; fi
+
 # Backend
 cd "$ROOT/backend"
 if [ ! -d ".venv" ]; then
