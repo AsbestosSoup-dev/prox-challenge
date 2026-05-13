@@ -177,7 +177,7 @@ function MachineSVG({ lcdProcess }: { lcdProcess?: string | null }) {
     const torchBody  = isDark ? "#3a5040" : "#2a4030"
     const torchNeck  = isDark ? "#2a3830" : "#1a2820"
     const switchOn   = isDark ? "#182018" : "#0e160e"
-    const connBase   = isDark ? "#141820" : "#1a1e2a"
+    const connBase   = isDark ? "#141820" : surf3
     const panel      = isDark ? "#1a1e24" : surf2
 
     // knob helper — outer ring → body → inner cap → downward orange triangle indicator
